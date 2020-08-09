@@ -1,0 +1,5 @@
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/obj/Debug/.NETFramework,Version=v4.6.2.AssemblyAttribute.cs
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/SlotsMath.pdb
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/SlotsMath.exe
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/obj/Debug/SlotsMath.exe
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/obj/Debug/SlotsMath.pdb

@@ -8,6 +8,7 @@ namespace SlotsMath
         private static int doSlotsId;
         public static void Main(string[] args)
         {
+            doSlotsId = 1001;
             DoSwitchId(doSlotsId);
         }
 
@@ -17,6 +18,7 @@ namespace SlotsMath
             {
                 case 1001:
                     DoSlotsById doSlotsById = new DoSlotsById();
+                    doSlotsById.Main();
                     return;
                 case 1002:
                     return;
