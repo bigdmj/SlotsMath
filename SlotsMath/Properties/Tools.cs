@@ -52,9 +52,28 @@ namespace SlotsMath.Properties
             {
             }
         }
+
+        /// <summary>
+        /// 获取列表中特定元素的数量
+        /// </summary>
+        /// <param name="inValueList"></param>
+        /// <param name="t"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static int GetElementCountInList<T>(List<T> inValueList, T t)
+        {
+            int elementCount = 0;
+            foreach (T value in inValueList)
+            {
+                if (value.Equals(t))
+                {
+                    elementCount++;
+                }
+            }
+            return elementCount;
+        }
     }
-
-
+    
     /// <summary>
     /// 判断文件状态
     /// </summary>
@@ -98,8 +117,7 @@ namespace SlotsMath.Properties
             return 0;
         }
     }
-
-
+    
     /// <summary>
     /// EXCEL处理类
     /// </summary>
@@ -366,7 +384,6 @@ namespace SlotsMath.Properties
         }
     }
     
-    
     /// <summary>
     /// 深克隆类
     /// </summary>
@@ -400,5 +417,6 @@ namespace SlotsMath.Properties
             return clone;
         }
     }
+    
 }
         

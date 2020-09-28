@@ -59,9 +59,10 @@ namespace SlotsMath.Properties
                     SymbolType = Properties.SymbolType.Custom;
                     break;
             }
+            SymbolPay = new List<double>{0,0,0,0,0,0,0};
             
         }
-        
+
         /// <summary>
         /// 设置元素赔率（构建时可不设置赔率，单独使用次方法设置赔率）
         /// </summary>
@@ -98,8 +99,8 @@ namespace SlotsMath.Properties
         /// <summary>
         /// 元素中奖次数增加（默认增加1）
         /// </summary>
-        /// <param name="symbolCount"></param>
-        /// <param name="winCount"></param>
+        /// <param name="symbolCount">中奖元素数</param>
+        /// <param name="winCount">中奖次数增加数</param>
         public void AddSymbolWinCount(int symbolCount,int winCount =1)
         {
             SymbolWinCount[symbolCount] += winCount;
@@ -118,6 +119,7 @@ namespace SlotsMath.Properties
         /// 从元素表，生产元素字典对象（不会设置赔率，需要单独指定元素的赔率）
         /// </summary>
         /// <param name="symbolDataTable">元素表</param>
+        /// <param name="payDataTable">赔率表</param>
         public SlotsSymbols(DataTable symbolDataTable,DataTable payDataTable)
         {
             int normalSymbolCount = 0;
@@ -183,20 +185,35 @@ namespace SlotsMath.Properties
         /// <summary>
         /// 卷轴构造函数
         /// </summary>
-        /// <param name="reel">卷轴列表</param>
-        public SlotsReel(DataTable dataTable, ReelType reelType = ReelType.Base)
+        /// <param name="reelDataTable">卷轴的DataTable</param>
+        /// <param name="reelType">卷轴类型</param>
+        public SlotsReel(DataTable reelDataTable, ReelType reelType = ReelType.Base)
         {
-            //todo 这里需要改成从dataTable生成
-//            Reel = reel;
-//            ColumnsCount = reel.Count;
-//            RowsCount = new List<int>();
-//            ExpandReel = new List<List<int>>();
-//            for (int i = 0; i < ColumnsCount; i++)
-//            {
-//                ExpandReel[i].AddRange(reel[i]);
-//                ExpandReel[i].AddRange(reel[i]);
-//                RowsCount.Add(reel[i].Count);
-//            }
+            List<List<int>> reel = new List<List<int>>();
+            int rowCount = reelDataTable.Rows.Count;
+            int columnsCount = reelDataTable.Columns.Count;
+            ColumnsCount = columnsCount;
+            for (int i = 0; i < columnsCount; i++)
+            {
+                for (int j = 1; j < rowCount; j++)
+                {
+                    if (reelDataTable.Rows[j][i].ToString()!="0")
+                    {
+                        try
+                        {
+                            reel[i].Add(Convert.ToInt32(reelDataTable.Rows[j][i].ToString()));
+                            RowsCount[j]++;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("dataTable转换Reel失败，行数为"+j+",列数为"+i+";");
+                            throw;
+                        }
+                    }
+                }
+            }
+            Reel = reel;
+            ExpandReel = GetExpandReel();
         }
 
         /// <summary>
@@ -214,6 +231,20 @@ namespace SlotsMath.Properties
                 symbolArray.Add(tempList);
             }
             return symbolArray;
+        }
+
+        /// <summary>
+        /// 获取卷轴的扩展列表
+        /// </summary>
+        /// <returns></returns>
+        private List<List<int>> GetExpandReel()
+        {
+            List<List<int>> expandReel = Clone.DepthClone(Reel);
+            for (int i = 0; i < expandReel.Count; i++)
+            {
+                expandReel[i].AddRange(expandReel[i]);
+            }
+            return expandReel;
         }
 
     }
@@ -269,7 +300,7 @@ namespace SlotsMath.Properties
     /// </summary>
     public class PayLine
     {
-        public List<List<int>> payLineList;
+        public List<List<int>> payLinesList;
 
         public PayLine(DataTable winLineDataTable)
         {
@@ -278,95 +309,29 @@ namespace SlotsMath.Properties
     }
 
 
-    /// <summary>
-    /// 矩阵类，包含元素矩阵的计算中奖方法
-    /// </summary>
-    public class SlotsArray
-    {
-        public List<List<int>> SymbolArray;                                    //中奖区域元素列表（每1个元素代表1列）
-        public bool IsWithLine;
-        private Dictionary<int, SlotsSymbol> SlotsSymbolDictionary;
-        public List<List<int>> LineConfig;
-        
-        /// <summary>
-        /// 矩阵对象构造函数
-        /// </summary>
-        /// <param name="symbolArray">元素矩阵列表</param>
-        /// <param name="slotsSymbolDictionary">元素字典</param>
-        /// <param name="lineConfig">中奖线配置</param>
-        public SlotsArray(List<List<int>> symbolArray, Dictionary<int,SlotsSymbol> slotsSymbolDictionary,List<List<int>> lineConfig = null)
-        {
-            SymbolArray = symbolArray;                                        //元素矩阵
-            SlotsSymbolDictionary = slotsSymbolDictionary;                    //元素字典
-            LineConfig = lineConfig;                                          //中奖线配置
-        }
-        
-        /// <summary>
-        /// 获取从左向右相同元素的数量(有中奖线的情况)
-        /// </summary>
-        /// <param name="oneLineSymbolList">一条线上的元素列表</param>
-        /// <returns></returns>
-        public virtual int GetSameSymbolCountWithLine(List<int> oneLineSymbolList)
-        {
-            int listCount = oneLineSymbolList.Count;
-            int winCount = 0;
-            int symbolId = 0;
-            if (oneLineSymbolList[0]==21)
-            {
-                //todo 这里没写
-                return 0;
-            }
-            else
-            {
-                //当第一列不是21时
-                for (int i = 1; i < listCount; i++)
-                {
-                    if (oneLineSymbolList[i] == 21 || oneLineSymbolList[i] == oneLineSymbolList[0] )
-                    {
-                        winCount++;
-                    }
-                    else
-                    {
-                        return winCount;
-                    }
-                }
-                return winCount;
-            }
-        }
-        
-        /// <summary>
-        /// 有中奖线类计算中奖金额
-        /// </summary>
-        /// <param name="isChangeWinCount">如果为true，则会修改slotsSymbolDidctionayr中的中奖次数</param>
-        /// <returns></returns>
-        public virtual double GetWinValueByArrayWithLine(bool isChangeWinCount = true)
-        {
-            double totalWin = 0;
-            List<int> oneLineSymbolList = new List<int>();
-            foreach (var i in LineConfig)
-            {
-                oneLineSymbolList.Clear();
-                int index = 0;
-                foreach (var j in i)
-                {
-                    oneLineSymbolList.Add(SymbolArray[index][j]);
-                    index++;
-                }
-            }
-            return totalWin;
-        }
-
-        /// <summary>
-        /// 获取赢钱数（无中奖线）
-        /// </summary>
-        /// <returns></returns>
-        public virtual double GetWinValueByArrayWithoutLine(bool isChangeWinCount = true)
-        {
-            double outValue = 0;
-            return outValue;
-        }
-        
-    }
+//    /// <summary>
+//    /// 矩阵类，包含元素矩阵的计算中奖方法
+//    /// </summary>
+//    public class SlotsArray
+//    {
+//        public List<List<int>> SymbolArray;                                    //中奖区域元素列表（每1个元素代表1列）
+//        public bool IsWithLine;
+//        private Dictionary<int, SlotsSymbol> SlotsSymbolDictionary;
+//        public List<List<int>> LineConfig;
+//        
+//        /// <summary>
+//        /// 矩阵对象构造函数
+//        /// </summary>
+//        /// <param name="symbolArray">元素矩阵列表</param>
+//        /// <param name="slotsSymbolDictionary">元素字典</param>
+//        /// <param name="lineConfig">中奖线配置</param>
+//        public SlotsArray(List<List<int>> symbolArray, Dictionary<int,SlotsSymbol> slotsSymbolDictionary,List<List<int>> lineConfig = null)
+//        {
+//            SymbolArray = symbolArray;                                        //元素矩阵
+//            SlotsSymbolDictionary = slotsSymbolDictionary;                    //元素字典
+//            LineConfig = lineConfig;                                          //中奖线配置
+//        }
+//    }
 
     /// <summary>
     /// slots父类，后续所有特殊玩法继承此类
@@ -375,7 +340,13 @@ namespace SlotsMath.Properties
     {
         public SlotsSymbols SlotsSymbols;                        //元素对象字典
         public SlotsReels SlotsReels;                         //卷轴对象字典
-
+        public PayLine PayLine;                                //中奖线对象
+        public List<SlotsSymbol> NormalSymbolsList;            //普通元素列表，在全线中只有这里面的元素会被查询普通中奖
+        public List<SlotsSymbol> ScatterSymbolsList;
+        public List<SlotsSymbol> BonusSymbolsList;
+        public List<SlotsSymbol> CollectSymbolsList;
+        public List<SlotsSymbol> CustomSymbolsList;
+        
         public bool IsWithLine;                    //是否有winLine
         public int Row;                            //显示区域的行数            
         public int Columns;                        //显示区域的列数
@@ -388,67 +359,143 @@ namespace SlotsMath.Properties
         /// </summary>
         /// <param name="rowsCount">显示区域行数</param>
         /// <param name="columnsCount">显示区域列数</param>
-        public Slots(SlotsSymbols slotsSymbols,SlotsReels slotsReels, int rowsCount = 3,int columnsCount = 5)
+        public Slots(SlotsSymbols slotsSymbols,SlotsReels slotsReels, int rowsCount = 3,int columnsCount = 5,PayLine payLine = null)
         {
             SlotsSymbols = slotsSymbols;                //元素总类实体
             SlotsReels = slotsReels;                 //卷轴字典
             Row = rowsCount;                            
             Columns = columnsCount;
-        }
-
-        /// <summary>
-        /// todo 需要移动到SlotsSymbols中
-        /// 从payTable的DataTable中生成SlotsSymbol
-        /// </summary>
-        /// <param name="dataTable">包含payTable信息的dataTable</param>
-        /// <param name="symbolId">元素id</param>
-        /// <returns>slotsSymbol对象</returns>
-        public SlotsSymbol GetSymbolFromDataTable(DataTable dataTable,int symbolId)
-        {
-            List<double> symbolPay = new List<double>();
-            for (int i = 0; i <= Columns; i++)
+            PayLine = payLine;
+            foreach (SlotsSymbol slotsSymbol in SlotsSymbols.SlotsSymbolsDic.Values)
             {
-                symbolPay.Add(0); 
-            }
-            for (int i = 1; i < dataTable.Rows.Count; i++)
-            {
-                symbolPay[i] = 1;
-            }
-            SlotsSymbol slotsSymbol = new SlotsSymbol(symbolId,symbolPay);
-            return slotsSymbol;
-        }
-
-        /// <summary>
-        /// 从DataTable生成SlotsReel
-        /// todo 需要移动到SlotsReels中
-        /// </summary>
-        /// <param name="dataTable">包含reel信息的dataTable</param>
-        /// <returns>生成的slotsReel对象</returns>
-        public SlotsReel GetReelFromDataTable(DataTable dataTable)
-        {
-            List<List<int>> reel = new List<List<int>>();
-            int rowCount = dataTable.Rows.Count;
-            int columnsCount = dataTable.Columns.Count;
-            for (int i = 0; i < columnsCount; i++)
-            {
-                for (int j = 1; j < rowCount; j++)
+                switch (slotsSymbol.SymbolType)
                 {
-                    if (dataTable.Rows[j][i].ToString()!="0")
+                    case SymbolType.Normal:
+                        NormalSymbolsList.Add(slotsSymbol);
+                        break;
+                    case SymbolType.Scatter:
+                        ScatterSymbolsList.Add(slotsSymbol);
+                        break;
+                    case SymbolType.Bonus:
+                        BonusSymbolsList.Add(slotsSymbol);
+                        break;
+                    case SymbolType.Collect:
+                        CollectSymbolsList.Add(slotsSymbol);
+                        break;
+                    case SymbolType.Custom:
+                        CustomSymbolsList.Add(slotsSymbol);
+                        break;
+                }
+            }
+        }
+
+        public struct WinSymbolInfo
+        {
+            public int SymbolId;
+            public int SymbolsCount;
+            public int SymbolWinTime;
+
+            public WinSymbolInfo(int symbolId,int symbolsCount,int symbolWinTime)
+            {
+                SymbolId = symbolId;
+                SymbolsCount = symbolsCount;
+                SymbolWinTime = symbolWinTime;
+            }
+        }
+
+        /// <summary>
+        /// 获取从左向右相同元素的数量(有中奖线的情况)
+        /// </summary>
+        /// <param name="oneLineSymbolList">一条线上的元素列表</param>
+        /// <returns>[元素id，中奖数量]，若id=0标示未中奖</returns>
+        public virtual WinSymbolInfo GetSameSymbolInfoWithLine(List<int> oneLineSymbolList)
+        {
+            int listCount = oneLineSymbolList.Count;
+            WinSymbolInfo winSymbolInfo = new WinSymbolInfo(0,0,0);
+            if (oneLineSymbolList[0]==21)
+            {
+                //todo 这里没写
+                return winSymbolInfo;
+            }
+            else
+            {
+                //当第一列不是21时
+                for (int i = 1; i < listCount; i++)
+                {
+                    if (oneLineSymbolList[i] == 21 || oneLineSymbolList[i] == oneLineSymbolList[0] )
                     {
-                        try
-                        {
-                            reel[i].Add(Convert.ToInt32(dataTable.Rows[j][i].ToString()));
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("dataTable转换Reel失败，行数为"+j+",列数为"+i+";");
-                            throw;
-                        }
+                        winSymbolInfo.SymbolId = oneLineSymbolList[0];
+                        winSymbolInfo.SymbolsCount++;
+                    }
+                    else
+                    {
+                        winSymbolInfo.SymbolWinTime++;
+                        return winSymbolInfo;
+                    }
+                }
+                return winSymbolInfo;
+            }
+        }
+        
+        /// <summary>
+        /// 有中奖线类计算中奖金额
+        /// </summary>
+        /// <param name="symbolArray">实际使用的元素矩阵</param>
+        /// <param name="isChangeWinTime">如果为true，则会修改slotsSymbolDictionary中的中奖次数</param>
+        /// <returns></returns>
+        public virtual double GetWinValueByArrayWithLine(List<List<int>> symbolArray,bool isChangeWinTime = true)
+        {
+            double totalWin = 0;
+            List<int> oneLineSymbolList = new List<int>();
+            foreach (var payline in PayLine.payLinesList)
+            {
+                oneLineSymbolList.Clear();
+                int index = 0;
+                //获取线上的元素
+                foreach (var j in payline)
+                {
+                    oneLineSymbolList.Add(symbolArray[index][j]);
+                    index++;
+                }
+                WinSymbolInfo tempWinSymbolInfo = GetSameSymbolInfoWithLine(oneLineSymbolList);
+                if (tempWinSymbolInfo.SymbolId>0)
+                {
+                    TotalWin += SlotsSymbols.SlotsSymbolsDic[tempWinSymbolInfo.SymbolId]
+                        .GetSymbolPay(tempWinSymbolInfo.SymbolsCount);
+                    if (isChangeWinTime)
+                    {
+                        SlotsSymbols.SlotsSymbolsDic[tempWinSymbolInfo.SymbolId].AddSymbolWinCount(tempWinSymbolInfo.SymbolsCount);
                     }
                 }
             }
-            SlotsReel slotsReel = new SlotsReel(reel);
-            return slotsReel;
+            return totalWin;
+        }
+
+        
+        public WinSymbolInfo GetWinSymbolInfoByArrayWithoutLine(List<List<int>> symbolArray, int symbolId)
+        {
+            WinSymbolInfo tempWinSymbolInfo = new WinSymbolInfo(symbolId,0,0);
+            List<int> symbolCountInArray = new List<int>();
+            //获取每一列特定元素数量
+            for (int i = 0; i < symbolArray.Count; i++)
+            {
+                symbolCountInArray.Add(Tools.GetElementCountInList(symbolArray[i],symbolId));
+            }
+            //todo
+            return tempWinSymbolInfo;
+        }
+
+        /// <summary>
+        /// 无中奖线时计算中奖
+        /// </summary>
+        /// <param name="symbolArray"></param>
+        /// <param name="isChangeWinCount"></param>
+        /// <param name="isPrintWinInformation"></param>
+        /// <returns></returns>
+        public virtual double GetWinValueByArrayWithoutLine(List<List<int>> symbolArray,bool isChangeWinCount = true,bool isPrintWinInformation = false)
+        {
+            double totalWin = 0;
+            return totalWin;
         }
 
         /// <summary>
@@ -457,16 +504,16 @@ namespace SlotsMath.Properties
         /// <param name="reelName">卷轴名称</param>
         public void ErgodicReel(string reelName)
         {
-            SlotsReel slotsReel = SlotsReelsDictionary[reelName];
+            SlotsReel slotsReel = SlotsReels.SlotsReelsDictionary[reelName];
             for (int i = 0; i < slotsReel.ColumnsCount; i++)
             {
                 
             }
             //打印中奖次数信息
-            foreach (var VARIABLE in SlotsSymbolDictionary)
-            {
-                
-            }
+//            foreach (var VARIABLE in SlotsSymbolDictionary)
+//            {
+//                
+//            }
         }
 
         /// <summary>
