@@ -249,6 +249,7 @@ namespace SlotsMath.Properties
 
     }
 
+
     /// <summary>
     /// 所有的卷轴整合到一起，包含卷轴字典，卷轴输入位置号，获取矩阵
     /// </summary>
@@ -295,6 +296,7 @@ namespace SlotsMath.Properties
 
     }
 
+    
     /// <summary>
     /// 中奖线类
     /// </summary>
@@ -306,9 +308,48 @@ namespace SlotsMath.Properties
         {
             
         }
+        
+        /// <summary>
+        /// 获取中奖线完整列表
+        /// </summary>
+        /// <param name="lineConfigDataTable"></param>
+        /// <returns></returns>
+        public List<List<int>> GetLineConfig(DataTable lineConfigDataTable)
+        {
+            List<List<int>> outList = new List<List<int>>();
+            int rows = lineConfigDataTable.Rows.Count;
+            for (int i = 0; i < rows; i++)
+            {
+                outList.Add(GetOneLineList(lineConfigDataTable.Rows[i][1].ToString()));
+            }
+            return outList;
+        }
+
+        /// <summary>
+        /// 获取单条中奖线列表
+        /// </summary>
+        /// <param name="lineString"></param>
+        /// <returns></returns>
+        private List<int> GetOneLineList(string lineString)
+        {
+            List<int> outList = new List<int>();
+            string[] arr = lineString.Split(';');
+            foreach (string VARIABLE in arr)
+            {
+                try
+                {
+                    outList.Add(Convert.ToInt32(VARIABLE.Split(',')[1]));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("中奖线获取失败");
+                    throw;
+                }
+            }
+            return outList;
+        }
     }
-
-
+    
 //    /// <summary>
 //    /// 矩阵类，包含元素矩阵的计算中奖方法
 //    /// </summary>
@@ -332,6 +373,7 @@ namespace SlotsMath.Properties
 //            LineConfig = lineConfig;                                          //中奖线配置
 //        }
 //    }
+
 
     /// <summary>
     /// slots父类，后续所有特殊玩法继承此类
@@ -389,12 +431,21 @@ namespace SlotsMath.Properties
             }
         }
 
+        /// <summary>
+        /// 中奖元素信息结构体
+        /// </summary>
         public struct WinSymbolInfo
         {
-            public int SymbolId;
-            public int SymbolsCount;
-            public int SymbolWinTime;
+            public int SymbolId;            //元素id
+            public int SymbolsCount;        //中奖元素数
+            public int SymbolWinTime;        //中奖次数
 
+            /// <summary>
+            /// 结构体构造函数
+            /// </summary>
+            /// <param name="symbolId">元素id</param>
+            /// <param name="symbolsCount">中奖元素数</param>
+            /// <param name="symbolWinTime">中奖次数</param>
             public WinSymbolInfo(int symbolId,int symbolsCount,int symbolWinTime)
             {
                 SymbolId = symbolId;
@@ -471,18 +522,68 @@ namespace SlotsMath.Properties
             return totalWin;
         }
 
-        
-        public WinSymbolInfo GetWinSymbolInfoByArrayWithoutLine(List<List<int>> symbolArray, int symbolId)
+        /// <summary>
+        /// 全中奖线时获取特定元素的中奖信息（对第一列有wild的情况无效）
+        /// </summary>
+        /// <param name="symbolArray">元素矩阵</param>
+        /// <param name="symbolId">元素id</param>
+        /// <param name="isWildCanSub">此元素是否能被wild替代</param>
+        /// <returns>中奖元素信息</returns>
+        public WinSymbolInfo GetWinSymbolInfoByArrayWithoutLine(List<List<int>> symbolArray, int symbolId, bool isWildCanSub = true)
         {
             WinSymbolInfo tempWinSymbolInfo = new WinSymbolInfo(symbolId,0,0);
-            List<int> symbolCountInArray = new List<int>();
+            List<int> symbolCountInArray = new List<int>();                        //每列特定元素的数量
             //获取每一列特定元素数量
             for (int i = 0; i < symbolArray.Count; i++)
             {
-                symbolCountInArray.Add(Tools.GetElementCountInList(symbolArray[i],symbolId));
+                int tempElementCount = Tools.GetElementCountInList(symbolArray[i], symbolId);
+                if (isWildCanSub)
+                {
+                    tempElementCount+=Tools.GetElementCountInList(symbolArray[i], 21);
+                }
+                symbolCountInArray.Add(tempElementCount);
             }
-            //todo
+            //确定中奖元素数和中奖次数
+            for (int i = 0; i < symbolCountInArray.Count; i++)
+            {
+                if (symbolCountInArray[i] == 0)
+                {
+                    return tempWinSymbolInfo;
+                }
+                else
+                {
+                    tempWinSymbolInfo.SymbolsCount = i;
+                    tempWinSymbolInfo.SymbolWinTime = i == 0 ? symbolCountInArray[0] : tempWinSymbolInfo.SymbolWinTime * symbolCountInArray[i];
+                }
+            }
             return tempWinSymbolInfo;
+        }
+
+        /// <summary>
+        /// 从元素矩阵中获取离散元素的信息
+        /// </summary>
+        /// <param name="symbolId"></param>
+        /// <returns></returns>
+        public WinSymbolInfo GetScatterSymbolInfoByArray(List<List<int>> symbolArray, int symbolId)
+        {
+            WinSymbolInfo winSymbolInfo = new WinSymbolInfo();
+            List<int>  symbolCountInArray = new List<int>();                        //每列特定元素的数量
+            //获取每一列特定元素数量
+            foreach (var t in symbolArray)
+            {
+                int tempElementCount = Tools.GetElementCountInList(t, symbolId);
+                symbolCountInArray.Add(tempElementCount);
+            }
+            foreach (var t in symbolCountInArray)
+            {
+                if (t>0)
+                {
+                    winSymbolInfo.SymbolsCount++;
+                    winSymbolInfo.SymbolWinTime =
+                        winSymbolInfo.SymbolsCount == 0 ? t : winSymbolInfo.SymbolsCount*t;
+                }
+            }
+            return winSymbolInfo;
         }
 
         /// <summary>
@@ -495,6 +596,21 @@ namespace SlotsMath.Properties
         public virtual double GetWinValueByArrayWithoutLine(List<List<int>> symbolArray,bool isChangeWinCount = true,bool isPrintWinInformation = false)
         {
             double totalWin = 0;
+            foreach (SlotsSymbol normalSymbol in NormalSymbolsList)
+            {
+                WinSymbolInfo tempWinSymbolInfo =
+                    GetWinSymbolInfoByArrayWithoutLine(symbolArray, normalSymbol.SymbolId);
+                totalWin += SlotsSymbols.SlotsSymbolsDic[normalSymbol.SymbolId]
+                                .GetSymbolPay(tempWinSymbolInfo.SymbolsCount) * tempWinSymbolInfo.SymbolWinTime;
+                if (isChangeWinCount)
+                {
+                    SlotsSymbols.SlotsSymbolsDic[normalSymbol.SymbolId].AddSymbolWinCount(tempWinSymbolInfo.SymbolsCount,tempWinSymbolInfo.SymbolWinTime);
+                }
+                if (isPrintWinInformation)
+                {
+                    Console.WriteLine("元素id："+tempWinSymbolInfo.SymbolId+"，中奖元素数："+tempWinSymbolInfo.SymbolsCount+"中奖次数:"+tempWinSymbolInfo.SymbolWinTime+";");
+                }
+            }
             return totalWin;
         }
 
@@ -517,43 +633,12 @@ namespace SlotsMath.Properties
         }
 
         /// <summary>
-        /// 获取中奖线完整列表
+        /// 全过程模拟
         /// </summary>
-        /// <param name="lineConfigDataTable"></param>
-        /// <returns></returns>
-        public List<List<int>> GetLineConfig(DataTable lineConfigDataTable)
+        /// <param name="analogTime"></param>
+        public void AnalogMethod(int analogTime)
         {
-            List<List<int>> outList = new List<List<int>>();
-            int rows = lineConfigDataTable.Rows.Count;
-            for (int i = 0; i < rows; i++)
-            {
-                outList.Add(GetOneLineList(lineConfigDataTable.Rows[i][1].ToString()));
-            }
-            return outList;
         }
-
-        /// <summary>
-        /// 获取单条中奖线列表
-        /// </summary>
-        /// <param name="lineString"></param>
-        /// <returns></returns>
-        private List<int> GetOneLineList(string lineString)
-        {
-            List<int> outList = new List<int>();
-            string[] arr = lineString.Split(';');
-            foreach (string VARIABLE in arr)
-            {
-                try
-                {
-                    outList.Add(Convert.ToInt32(VARIABLE.Split(',')[1]));
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("中奖线获取失败");
-                    throw;
-                }
-            }
-            return outList;
-        }
+        
     }
 }

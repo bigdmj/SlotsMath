@@ -58,7 +58,7 @@ namespace SlotsMath.Properties
         /// </summary>
         /// <param name="inValueList"></param>
         /// <param name="t"></param>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">任何类型</typeparam>
         /// <returns></returns>
         public static int GetElementCountInList<T>(List<T> inValueList, T t)
         {
@@ -71,6 +71,19 @@ namespace SlotsMath.Properties
                 }
             }
             return elementCount;
+        }
+
+        /// <summary>
+        /// 根据权重随机，未完成
+        /// todo
+        /// </summary>
+        /// <param name="randomObjectList">需要随机的对象</param>
+        /// <param name="randomWeight">权重列表</param>
+        /// <typeparam name="T">任何类型</typeparam>
+        /// <returns></returns>
+        public static T Random<T>(List<T> randomObjectList,List<double> randomWeightList)
+        {
+            return randomObjectList[0];
         }
     }
     
