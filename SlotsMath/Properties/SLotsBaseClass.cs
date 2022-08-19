@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using NPOI.HSSF.Record;
-using NPOI.SS.Formula.Functions;
 
 namespace SlotsMath.Properties
 {
@@ -50,22 +47,22 @@ namespace SlotsMath.Properties
             switch (symbolType)
             {
                 case "normal":
-                    SymbolType = Properties.SymbolType.Normal;
+                    SymbolType = SymbolType.Normal;
                     break;
                 case "wild":
-                    SymbolType = Properties.SymbolType.Wild;
+                    SymbolType = SymbolType.Wild;
                     break;
                 case "scatter":
-                    SymbolType = Properties.SymbolType.Scatter;
+                    SymbolType = SymbolType.Scatter;
                     break;
                 case "bonus":
-                    SymbolType = Properties.SymbolType.Bonus;
+                    SymbolType = SymbolType.Bonus;
                     break;
                 case "collect":
-                    SymbolType = Properties.SymbolType.Collect;
+                    SymbolType = SymbolType.Collect;
                     break;
                 case "custom":
-                    SymbolType = Properties.SymbolType.Custom;
+                    SymbolType = SymbolType.Custom;
                     break;
             }
             SymbolPay = new Dictionary<int, double>();

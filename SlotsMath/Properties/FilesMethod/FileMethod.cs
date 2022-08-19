@@ -251,10 +251,7 @@ namespace SlotsMath.Properties.FileMethod
             }
             catch (Exception ex)
             {
-                if (fs != null)
-                {
-                    fs.Close();
-                }
+                fs?.Close();
                 throw ex;
             }
         }

@@ -1,7 +1,7 @@
 using System;
 using System.Data;
 using System.Collections.Generic;
-using SlotsMath.Properties.SlotsImitate;
+using SlotsMath.Properties.SlotsComputer;
 
 
 namespace SlotsMath.Properties.SlotsMethod
@@ -13,7 +13,7 @@ namespace SlotsMath.Properties.SlotsMethod
             //生成DataTable
             Dictionary<string, DataTable> dictionary =
                 FileMethod.FileMethod.ExcelToDataTables(
-                    "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/config/10001_casino.xlsx");
+                    Program.configPath+"10001_casino.xlsx");
             //生成SLots
             Slots slots = new Slots(dictionary,3,5,true);
             //调用Slots

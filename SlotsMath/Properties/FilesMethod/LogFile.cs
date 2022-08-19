@@ -6,7 +6,7 @@ namespace SlotsMath.Properties.FileMethod
     public static class LogFile
     {
         /// <summary>
-        /// 清空log
+        /// 清空log文件
         /// </summary>
         /// <param name="logName">日志文件名称</param>
         public static void ClearLog(string logName)
@@ -21,6 +21,11 @@ namespace SlotsMath.Properties.FileMethod
             }
         }
 
+        /// <summary>
+        /// 将logTxt保存到日志文件中(后续插入，如果要清空请手动clear)
+        /// </summary>
+        /// <param name="logName">日志文件名称</param>
+        /// <param name="logTxt">文本</param>
         public static void SaveLog(string logName,string logTxt)
         {
             string savePath = Program.logPath + logName;

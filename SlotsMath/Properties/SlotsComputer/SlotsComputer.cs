@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace SlotsMath.Properties.SlotsImitate
+namespace SlotsMath.Properties.SlotsComputer
 {
     /// <summary>
     /// slots父类，后续所有特殊玩法继承此类
@@ -60,6 +60,12 @@ namespace SlotsMath.Properties.SlotsImitate
                 PayLine = new PayLine(dictionary["line"]);
             }
             //将元素装到对应的类型容器中
+            NormalSymbolsList = new List<SlotsSymbol>();
+            WildSymbolsList = new List<SlotsSymbol>();
+            ScatterSymbolsList = new List<SlotsSymbol>();
+            BonusSymbolsList = new List<SlotsSymbol>();
+            CollectSymbolsList = new List<SlotsSymbol>();
+            CustomSymbolsList = new List<SlotsSymbol>();
             foreach (int key in SlotsSymbols.SlotsSymbolsDic.Keys)
             {
                 switch (SlotsSymbols.SlotsSymbolsDic[key].SymbolType)
@@ -86,7 +92,7 @@ namespace SlotsMath.Properties.SlotsImitate
                         throw (new SlotsTools.TempIsZeroException("Symbol Type is Wrong"));
                 }
             }
-
+            //给常用变量赋值
             IsWithLine = isWithLine;
             Row = rowsCount;
             Columns = columnsCount;
