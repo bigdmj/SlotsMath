@@ -3,3 +3,10 @@
 /Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/SlotsMath.exe
 /Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/obj/Debug/SlotsMath.exe
 /Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/obj/Debug/SlotsMath.pdb
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/BouncyCastle.Crypto.dll
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/ICSharpCode.SharpZipLib.dll
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/Newtonsoft.Json.dll
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/NPOI.dll
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/NPOI.OOXML.dll
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/NPOI.OpenXml4Net.dll
+/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/bin/Debug/NPOI.OpenXmlFormats.dll

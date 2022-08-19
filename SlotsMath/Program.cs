@@ -3,8 +3,12 @@ using SlotsMath.Properties.SlotsMethod;
 
 namespace SlotsMath
 {
-    internal class Program
+    
+    static class Program
     {
+        public static string configPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/config/";
+        public static string logPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/log/";
+        
         private static int doSlotsId;
         public static void Main(string[] args)
         {
@@ -25,7 +29,4 @@ namespace SlotsMath
             }
         }
     }
-    
-    
-    
 }
