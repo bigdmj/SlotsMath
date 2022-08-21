@@ -74,6 +74,7 @@
     <Compile Include="Properties\DoSlots\DoSlotsById.cs" />
     <Compile Include="Properties\SLotsBaseClass.cs" />
     <Compile Include="Properties\SlotsComputer\SlotsComputer.cs" />
+    <Compile Include="Properties\SlotsComputer\SlotsComputer10001.cs" />
     <Compile Include="Properties\SlotsTools.cs" />
   </ItemGroup>
   <ItemGroup>

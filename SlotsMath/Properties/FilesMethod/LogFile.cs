@@ -1,3 +1,6 @@
+/*
+ * 日志相关
+ */
 using System.Globalization;
 using System.IO;
 
@@ -31,26 +34,19 @@ namespace SlotsMath.Properties.FileMethod
             string savePath = Program.logPath + logName;
             if (File.Exists(savePath))
             {
-                
                 StreamWriter sw = File.AppendText(savePath);
-                sw.Write("\n"+logTxt);
-                //开始写
-                //清空缓冲区
-                sw.Flush();
-                //关闭流
-                sw.Close();
+                sw.Write(logTxt); //开始写
+                sw.Flush(); //清空缓冲区
+                sw.Close(); //关闭流
                 sw.Dispose();
             }
             else
             {
                 FileStream fs = new FileStream(savePath,FileMode.Create);
                 StreamWriter sw = File.AppendText(savePath);
-                sw.Write(logTxt);
-                //开始写
-                //清空缓冲区
-                sw.Flush();
-                //关闭流
-                sw.Close();
+                sw.Write(logTxt); //开始写
+                sw.Flush(); //清空缓冲区
+                sw.Close(); //关闭流
                 sw.Dispose();
                 fs.Close();
             }

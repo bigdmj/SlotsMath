@@ -1,22 +1,53 @@
+/*
+ * slots用到的基础类，包括symbol，reel，line等
+ */
 using System;
 using System.Collections.Generic;
 using System.Data;
 
 namespace SlotsMath.Properties
 {
+    /// <summary>
+    /// 元素类型枚举
+    /// </summary>
     public enum SymbolType
     {
         Normal,//1-普通元素
         Wild,//2-万能元素
         Scatter,//4-特殊机制元素
         Bonus,//8-大奖元素
-        Collect,//16-收集元素
-        Custom//32-自定义元素
+        Free,//16-freespin元素
+        Collect,//32-收集元素
+        Custom//64-自定义元素
 
     }
     
+    
     /// <summary>
-    /// 
+    /// 中奖元素信息结构体
+    /// </summary>
+    public struct WinSymbolInfo
+    {
+        public SlotsSymbol SlotsSymbol; //元素id
+        public int SymbolsCount; //中奖元素数
+        public int SymbolWinTime; //中奖次数
+
+        /// <summary>
+        /// 结构体构造函数
+        /// </summary>
+        /// <param name="symbolId">元素id</param>
+        /// <param name="symbolsCount">中奖元素数</param>
+        /// <param name="symbolWinTime">中奖次数</param>
+        public WinSymbolInfo(SlotsSymbol slotsSymbol, int symbolsCount, int symbolWinTime)
+        {
+            SlotsSymbol = slotsSymbol;
+            SymbolsCount = symbolsCount;
+            SymbolWinTime = symbolWinTime;
+        }
+    }
+    
+    /// <summary>
+    /// 卷轴类型枚举
     /// </summary>
     public enum ReelType
     {
@@ -24,7 +55,7 @@ namespace SlotsMath.Properties
         Free,
         Custom
     }
-
+    
     /// <summary>
     /// 元素类，维护元素的赔率，中奖次数等信息
     /// </summary>
@@ -57,6 +88,9 @@ namespace SlotsMath.Properties
                     break;
                 case "bonus":
                     SymbolType = SymbolType.Bonus;
+                    break;
+                case "free":
+                    SymbolType = SymbolType.Free;
                     break;
                 case "collect":
                     SymbolType = SymbolType.Collect;
@@ -130,7 +164,7 @@ namespace SlotsMath.Properties
         {
             if (!SymbolPay.ContainsKey(symbolCount))
             {
-                throw new  ArgumentOutOfRangeException(symbolCount+"个"+SymbolId+"元素的赔率在赔率表中不存在");
+                return 0;
             }
             return SymbolPay[symbolCount];
         }
@@ -204,15 +238,17 @@ namespace SlotsMath.Properties
                         symbolType = "bonus";
                         break;
                     case "16":
-                        symbolType = "collect";
+                        symbolType = "free";
                         break;
                     case "32":
+                        symbolType = "collect";
+                        break;
+                    case "64":
                         symbolType = "custom";
                         break;
                     default:
                         throw (new SlotsTools.TempIsZeroException("指定元素类型不存在"));
-                }
-
+                }//设置元素类型
                 SlotsSymbol tempSlotsSymbol = new SlotsSymbol(symbolId, symbolType);
                 SlotsSymbolsDic[symbolId] = tempSlotsSymbol;
                 if (symbolType == "normal")
@@ -304,6 +340,22 @@ namespace SlotsMath.Properties
 
             return symbolArray;
         }
+        
+        public List<List<int>> GetRandomArray(int interceptRowsCount = 3)
+        {
+            List<int> position = new List<int>();
+            for (int i = 0; i < Reel.Count; i++)
+            {
+                position.Add(new Random().Next(0,Reel[i].Count));
+            }
+            List<List<int>> symbolArray = new List<List<int>>();
+            for (int i = 0; i < position.Count; i++)
+            {
+                List<int> tempList = ExpandReel[i].GetRange(position[i], interceptRowsCount);
+                symbolArray.Add(tempList);
+            }
+            return symbolArray;
+        }
 
         /// <summary>
         /// 获取卷轴的扩展列表
@@ -311,7 +363,7 @@ namespace SlotsMath.Properties
         /// <returns></returns>
         private List<List<int>> GetExpandReel()
         {
-            List<List<int>> expandReel = Clone.DepthClone(Reel);
+            List<List<int>> expandReel = SlotsTools.DepthClone(Reel);
             for (int i = 0; i < expandReel.Count; i++)
             {
                 expandReel[i].AddRange(expandReel[i]);
@@ -319,10 +371,8 @@ namespace SlotsMath.Properties
 
             return expandReel;
         }
-
     }
-
-
+    
     /// <summary>
     /// 所有的卷轴整合到一起，包含卷轴字典，卷轴输入位置号，获取矩阵
     /// </summary>
@@ -381,8 +431,12 @@ namespace SlotsMath.Properties
     /// </summary>
     public class PayLine
     {
-        public List<List<int>> payLinesList;
+        public List<List<int>> payLinesList; //中奖线列表 {{1,2,3}{1,2,3}}
 
+        /// <summary>
+        /// 用中奖线配置生成payLinesList
+        /// </summary>
+        /// <param name="winLineDataTable">中奖线dataTable</param>
         public PayLine(DataTable winLineDataTable)
         {
             payLinesList = GetLineConfig(winLineDataTable);
@@ -431,8 +485,5 @@ namespace SlotsMath.Properties
             return outList;
         }
     }
-
-    
-
     
 }

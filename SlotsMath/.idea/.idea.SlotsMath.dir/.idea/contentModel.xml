@@ -19,6 +19,7 @@
         <e p="SLotsBaseClass.cs" t="Include" />
         <e p="SlotsComputer" t="Include">
           <e p="SlotsComputer.cs" t="Include" />
+          <e p="SlotsComputer10001.cs" t="Include" />
         </e>
         <e p="SlotsTools.cs" t="Include" />
       </e>

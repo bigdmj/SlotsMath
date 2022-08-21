@@ -1,6 +1,8 @@
+/*
+ * 用到的一些工具脚本,比如说用窗口抛出异常信息，获取列表中特定元素的数量，把dic和list转化为string方便打印
+ */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
@@ -11,7 +13,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.HSSF.UserModel;
-using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 
@@ -54,22 +55,46 @@ namespace SlotsMath.Properties
             }
         }
 
-        public static void PrintDict(Dictionary<int, double> dict)
+        /// <summary>
+        /// 把字典全部转化为string
+        /// </summary>
+        /// <param name="dict">字典的key和value必须可以转化为string</param>
+        /// <returns></returns>
+        public static string DictToString<T>(Dictionary<T, T> dict)
         {
-            foreach (int key in dict.Keys)
+            string outString = "";
+            foreach (var key in dict.Keys)
             {
-                Console.WriteLine(key.ToString()+":"+dict[key].ToString());
+                outString += "key:" + key.ToString()+",Value:"+dict[key].ToString()+";\n";
             }
+            return outString;
+        }
+
+        /// <summary>
+        /// 把list转化为string
+        /// </summary>
+        /// <param name="list">list中的元素必须能转化为string</param>
+        /// <returns></returns>
+        public static string ListToString<T> (List<T> list)
+        {
+            string outString = "[";
+            foreach (var VARIABLE in list)
+            {
+                outString += VARIABLE.ToString() + ",";
+            }
+            outString = outString.Substring(0, outString.Length - 1);
+            outString += "]";
+            return outString;
         }
 
         /// <summary>
         /// 获取列表中特定元素的数量
         /// </summary>
-        /// <param name="inValueList"></param>
-        /// <param name="t"></param>
+        /// <param name="inValueList">查询对象列表</param>
+        /// <param name="t">查询值</param>
         /// <typeparam name="T">任何类型</typeparam>
         /// <returns></returns>
-        public static int GetElementCountInList<T>(List<T> inValueList, T t)
+        public static int GetSymbolCountInList<T>(List<T> inValueList, T t)
         {
             int elementCount = 0;
             foreach (T value in inValueList)
@@ -83,6 +108,84 @@ namespace SlotsMath.Properties
         }
 
         /// <summary>
+        /// 从元素矩阵中获取特定元素的数量
+        /// </summary>
+        /// <param name="symbolArray">元素矩阵</param>
+        /// <param name="symbolId">元素id</param>
+        /// <returns>int</returns>
+        public static int GetSymbolCountByArray(List<List<int>> symbolArray, int symbolId)
+        {
+            int outInt = 0;
+            List<int> symbolCountInArray = new List<int>(); //每列特定元素的数量
+            //获取每一列特定元素数量
+            foreach (List<int> i in symbolArray)
+            {
+                int tempElementCount = SlotsTools.GetSymbolCountInList(i, symbolId);
+                symbolCountInArray.Add(tempElementCount);
+            }
+
+            foreach (int i in symbolCountInArray)
+            {
+                outInt += i;
+            }
+
+            return outInt;
+        }
+        
+        /// <summary>
+        /// 从元素矩阵中获取特定多个元素的数量
+        /// </summary>
+        /// <param name="symbolArray">元素矩阵</param>
+        /// <param name="symbolId">元素id</param>
+        /// <returns>int</returns>
+        public static int GetSymbolsCountByArray(List<List<int>> symbolArray, List<int> symbolIds)
+        {
+            int outInt = 0;
+            List<int> symbolCountInArray = new List<int>(); //每列特定元素的数量
+            //获取每一列特定元素数量
+            foreach (int symbolId in symbolIds)
+            {
+                symbolCountInArray.Clear();
+                foreach (List<int> i in symbolArray)
+                {
+                    int tempElementCount = GetSymbolCountInList(i, symbolId);
+                    symbolCountInArray.Add(tempElementCount);
+                }//将特定元素在数组中的数量记录到列表中（逐列）
+                foreach (int i in symbolCountInArray)
+                {
+                    outInt += i;
+                } //将值累加到输出值中
+            }
+            return outInt;
+        }
+
+        
+        /// <summary>
+        /// 输出中奖线上的元素列表
+        /// </summary>
+        /// <param name="symbolArray">元素矩阵</param>
+        /// <param name="lineList">一条中奖线配置</param>
+        /// <returns></returns>
+        /// <exception cref="TempIsZeroException"></exception>
+        public static List<int> GetSymbolListWithLine(List<List<int>> symbolArray,List<int> lineList)
+        {
+            List<int> outList = new List<int>();
+            if (symbolArray.Count == lineList.Count)
+            {
+                for (int i = 0; i < symbolArray.Count; i++)
+                {
+                    outList.Add(symbolArray[i][lineList[i]]);
+                }
+            }
+            else
+            {
+                throw (new TempIsZeroException("the symbolArray count is not like lineList count"));
+            }
+
+            return outList;
+        }
+
+        /// <summary>
         /// 根据权重随机，未完成
         /// todo
         /// </summary>
@@ -93,6 +196,34 @@ namespace SlotsMath.Properties
         public static T Random<T>(List<T> randomObjectList,List<double> randomWeightList)
         {
             return randomObjectList[0];
+        }
+        
+        /// <summary>
+        /// 深克隆
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static T DepthClone<T>(T t)
+        {
+            T clone = default(T);
+            using (Stream stream = new MemoryStream())
+            {
+                IFormatter formatter = new BinaryFormatter();
+                try
+                {
+                    formatter.Serialize(stream, t);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    clone = (T) formatter.Deserialize(stream);
+                }
+                catch (SerializationException e)
+                {
+                    Console.WriteLine("Failed to serialize. Reason: " + e.Message);
+                    throw;
+                }
+            }
+
+            return clone;
         }
     }
     
@@ -405,41 +536,6 @@ namespace SlotsMath.Properties
             Console.WriteLine(json.ToString(Formatting.None));
         }
     }
-    
-    /// <summary>
-    /// 深克隆类
-    /// </summary>
-    public static class Clone
-    {
-        /// <summary>
-        /// 深克隆
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static T DepthClone<T>(T t)
-        {
-            T clone = default(T);
-            using (Stream stream = new MemoryStream())
-            {
-                IFormatter formatter = new BinaryFormatter();
-                try
-                {
-                    formatter.Serialize(stream, t);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    clone = (T) formatter.Deserialize(stream);
-                }
-                catch (SerializationException e)
-                {
-                    Console.WriteLine("Failed to serialize. Reason: " + e.Message);
-                    throw;
-                }
-            }
-
-            return clone;
-        }
-    }
-    
     
 }
         
