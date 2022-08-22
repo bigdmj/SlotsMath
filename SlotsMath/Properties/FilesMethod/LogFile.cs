@@ -1,6 +1,8 @@
 /*
  * 日志相关
  */
+
+using System;
 using System.Globalization;
 using System.IO;
 
@@ -14,7 +16,7 @@ namespace SlotsMath.Properties.FileMethod
         /// <param name="logName">日志文件名称</param>
         public static void ClearLog(string logName)
         {
-            string savePath = Program.logPath + logName;
+            string savePath = Program.logPath + logName+".txt";
             if (File.Exists(savePath))
             {
                 FileStream stream = File.Open(savePath, FileMode.OpenOrCreate, FileAccess.Write);
@@ -31,7 +33,8 @@ namespace SlotsMath.Properties.FileMethod
         /// <param name="logTxt">文本</param>
         public static void SaveLog(string logName,string logTxt)
         {
-            string savePath = Program.logPath + logName;
+            if (!Program.EnableSaveLog) return;
+            string savePath = Program.logPath + logName +".txt";
             if (File.Exists(savePath))
             {
                 StreamWriter sw = File.AppendText(savePath);

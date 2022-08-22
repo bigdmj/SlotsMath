@@ -82,7 +82,8 @@ namespace SlotsMath.Properties
             {
                 outString += VARIABLE.ToString() + ",";
             }
-            outString = outString.Substring(0, outString.Length - 1);
+
+            if (list.Count>0)outString = outString.Substring(0, outString.Length - 1);
             outString += "]";
             return outString;
         }

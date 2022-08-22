@@ -13,6 +13,7 @@
           <e p="DoSlotsById.cs" t="Include" />
         </e>
         <e p="FilesMethod" t="Include">
+          <e p="DataTableMethod.cs" t="Include" />
           <e p="FileMethod.cs" t="Include" />
           <e p="LogFile.cs" t="Include" />
         </e>

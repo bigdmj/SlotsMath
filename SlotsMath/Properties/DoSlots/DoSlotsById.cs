@@ -13,6 +13,9 @@ using SlotsMath.Properties.SlotsComputer;
 
 namespace SlotsMath.Properties.SlotsMethod
 {
+    /// <summary>
+    /// spin的类型枚举
+    /// </summary>
     public enum SpinType
     {
         BseSpin,
@@ -23,9 +26,16 @@ namespace SlotsMath.Properties.SlotsMethod
     
     public class DoSlotsById
     {
-        public string logName;//日志文件名
-        public void Main()
+        public DoSlotsById(int id)
         {
+            LogName = id.ToString();
+        }
+
+        public string LogName;//日志文件名
+        
+        public virtual void Main()
+        {
+            //todo excel的base分页没有处理，很多数据还是手动写入的
             bool isWithLine = true;
             int row = 3;
             int  columns = 5;
@@ -33,8 +43,8 @@ namespace SlotsMath.Properties.SlotsMethod
             double baseWin = 0;
             double freeWin = 0;
             double totalWin = 0;
-            int simulateTime = 100; //模拟次数
-            int logTime = 100;        //打印日志次数
+            int simulateTime = 10000; //模拟次数
+            int logTime = 10000;        //打印日志次数
             Dictionary<int,int> freeCountDict = new Dictionary<int, int>();
             freeCountDict.Add(3,5);
             freeCountDict.Add(4,8);
@@ -43,41 +53,68 @@ namespace SlotsMath.Properties.SlotsMethod
             scatterRewardDict.Add(3,5);
             scatterRewardDict.Add(4,8);
             scatterRewardDict.Add(5,15);
-            logName = "1001.txt";
-            LogFile.ClearLog(logName); //清空日志
+            
+            LogFile.ClearLog(LogName); //清空日志
             //生成DataTable
             Dictionary<string, DataTable> dictionary =
                 FileMethod.FileMethod.ExcelToDataTables(
                     Program.configPath+"10001_casino.xlsx");
             //生成SLots
-            SlotsComputer.SlotsComputer slotsComputer = new SlotsComputer.SlotsComputer10001(dictionary,27,logName,3,5,true);
-//            List<List<int>> symbolArray = new List<List<int>>();
-//            List<int> positionList = new List<int>(){0,0,26,0,3};
-//            symbolArray = slotsComputer.BaseSlotsReels.SlotsReelsDictionary["basespin1"].GetArray(positionList);
-            //调用Slots
+            SlotsComputer.SlotsComputer slotsComputer = new SlotsComputer.SlotsComputer10001(dictionary,27,LogName,3,5,true);
             totalWin = SimulateSlotsWithLine(slotsComputer, simulateTime, logTime);// 模拟slots
 //            totalWin = SimulateSlotsWithoutLine(slotsComputer, simulateTime, logTime);// 模拟slots
-            LogFile.SaveLog(logName,$"is OK,total Win :{totalWin}");
+            LogFile.SaveLog(LogName,$"is OK,total Win :{totalWin}");
             Console.WriteLine($"is OK,total Win :{totalWin}");
         }
 
         /// <summary>
         /// 模拟特定次数的slots(有中奖线)
-        /// todo 把free等特殊机制考虑入内
         /// </summary>
-        /// <param name="slotsComputer"></param>
-        /// <param name="simulateTime"></param>
-        /// <param name="logTime"></param>
+        /// <param name="slotsComputer">slotsComputer规则实体</param>
+        /// <param name="simulateTime">模拟次数</param>
+        /// <param name="logTime">日志打印次数</param>
         /// <returns></returns>
         public virtual double SimulateSlotsWithLine(SlotsComputer.SlotsComputer slotsComputer,int simulateTime,int logTime)
         {
             int nowLogTime = 0;
             double totalWin = 0;
             int waitFreeTime = 0;
+            int freeIndex = 0;
             SimulateDataInfo tempSimulateDataInfo = new SimulateDataInfo();
+            #region 创建导出excel用的dataTable，并定义表头
+            DataTable saveDataTable = new DataTable(); //将日志保存成dataTable，方便保存到excel中
+            saveDataTable.Columns.Add("id", typeof(int)); //模拟序号
+            saveDataTable.Columns.Add("index", typeof(int)); //spin序号
+            saveDataTable.Columns.Add("spinType", typeof(string)); //spin类型
+            saveDataTable.Columns.Add("positon", typeof(string)); //位置号列表
+            saveDataTable.Columns.Add("bet", typeof(double)); //下注金额
+            saveDataTable.Columns.Add("isWin", typeof(int)); //是否有赢钱
+            saveDataTable.Columns.Add("lineIndex", typeof(string)); //有中奖的中奖线列表
+            saveDataTable.Columns.Add("winSymbolInfo", typeof(string)); //中奖元素信息
+            saveDataTable.Columns.Add("winValue", typeof(double)); //总赢钱金额
+            #endregion
+            List<int> position = new List<int>(); //位置号列表
+            List<List<int>> tempArray = new List<List<int>>(); //元素矩阵
             for (int i = 0; i < simulateTime; i++,nowLogTime++)
             {
-                List<List<int>> tempArray = slotsComputer.BaseSlotsReels.SlotsReelsDictionary["basespin1"].GetRandomArray();
+                //实时显示进度
+                if ((i+1)%Convert.ToInt32(simulateTime/100) == 0)
+                {
+                    Console.WriteLine($" i is {i},finish {(double) (i+1)/(double)simulateTime*100}%，time is {DateTime.Now}" );
+                }
+                position.Clear();
+                tempArray.Clear();
+                freeIndex = 0;
+                //获取spin的position
+                for (int reelindex = 0;
+                    reelindex < slotsComputer.BaseSlotsReels.SlotsReelsDictionary["basespin1"].Reel.Count;
+                    reelindex++)
+                {
+                    position.Add(new Random().Next(0,
+                        slotsComputer.BaseSlotsReels.SlotsReelsDictionary["basespin1"].Reel[reelindex].Count));
+                }
+                //用positon在卷轴中截取矩阵
+                tempArray = slotsComputer.BaseSlotsReels.SlotsReelsDictionary["basespin1"].GetArray(position);
                 if (nowLogTime <= logTime)
                 {
                     string tempString = "symbolArray:";
@@ -86,24 +123,45 @@ namespace SlotsMath.Properties.SlotsMethod
                         tempString += SlotsTools.ListToString(list);
                     }
                     tempString += ";";
-                    LogFile.SaveLog(logName,tempString);
-                }
-                totalWin += slotsComputer.GetWinValueByArrayWithLine(tempArray, true, false);
-                tempSimulateDataInfo = slotsComputer.GetBaseSpinSimulateDateWithLine(tempArray);
+                    LogFile.SaveLog(LogName,tempString);
+                } //输出日志
+                tempSimulateDataInfo = slotsComputer.GetBaseSpinSimulateDateWithLine(tempArray,true); //模拟base
+                totalWin += tempSimulateDataInfo.NormalWinValue + tempSimulateDataInfo.ScatterWinValue; //将总赢钱数进行计算
                 waitFreeTime += tempSimulateDataInfo.AddFreeTime;
-                //打印本次spin日志
+                //打印本次spin日志(txt 和 DataTable都有)
                 if (nowLogTime < logTime)
                 {
-                    LogFile.SaveLog(logName, "finish oneTime Base\n");
+                    LogFile.SaveLog(LogName, "finish oneTime Base\n");
+                    //将模拟数据导入到dataTable中方便输出
+                    saveDataTable.Rows.Add(i, 0,"basespin",SlotsTools.ListToString(position),slotsComputer.Bet,tempSimulateDataInfo.NormalWinValue+tempSimulateDataInfo.ScatterWinValue>0?1:0,SlotsTools.ListToString(tempSimulateDataInfo.WinLineIndexList),tempSimulateDataInfo.NormalSymbolWinInfoDictToString(),tempSimulateDataInfo.NormalWinValue+tempSimulateDataInfo.ScatterWinValue);
                 }
                 //处理free 将来如果有其他特殊机制也是在这里处理
                 while (waitFreeTime >0)
                 {
-                    LogFile.SaveLog(logName, "finish oneTime Free\n");
+                    position.Clear();
+                    tempArray.Clear();
+                    //获取spin的position
+                    for (int reelindex = 0; reelindex < slotsComputer.FreeSlotsReels.SlotsReelsDictionary["freespin1"].Reel.Count; reelindex++)
+                    {
+                        position.Add(new Random().Next(0,slotsComputer.FreeSlotsReels.SlotsReelsDictionary["freespin1"].Reel[reelindex].Count));
+                    }
+                    tempArray = slotsComputer.FreeSlotsReels.SlotsReelsDictionary["freespin1"].GetArray(position);
+                    tempSimulateDataInfo = slotsComputer.GetFreeSpinSimulateDateWithLine(tempArray, true);//模拟free
+                    totalWin += tempSimulateDataInfo.NormalWinValue + tempSimulateDataInfo.ScatterWinValue; //将总赢钱数进行计算
+                    waitFreeTime += tempSimulateDataInfo.AddFreeTime;
+                    //打印本次spin日志(txt 和 DataTable都有)
+                    if (nowLogTime < logTime)
+                    {
+                        LogFile.SaveLog(LogName, "finish oneTime Free\n");
+                        //将模拟数据导入到dataTable中方便输出
+                        saveDataTable.Rows.Add(i, freeIndex,"freespin",SlotsTools.ListToString(position),0,tempSimulateDataInfo.NormalWinValue+tempSimulateDataInfo.ScatterWinValue>0?1:0,SlotsTools.ListToString(tempSimulateDataInfo.WinLineIndexList),tempSimulateDataInfo.NormalSymbolWinInfoDictToString(),tempSimulateDataInfo.NormalWinValue+tempSimulateDataInfo.ScatterWinValue);
+                    }
                     waitFreeTime--;
+                    freeIndex++;
                 }
-                LogFile.SaveLog(logName,"\n");
-            }
+                LogFile.SaveLog(LogName,"\n");
+            } //进行模拟
+            DataTableMethod.DataToExcel(saveDataTable, LogName);
             return totalWin;
         }
         
@@ -120,9 +178,11 @@ namespace SlotsMath.Properties.SlotsMethod
             int nowLogTime = 0;
             double totalWin = 0;
             int waitFreeTime = 0;
+           
+
             for (int i = 0; i < simulateTime; i++,nowLogTime++)
             {
-                if (nowLogTime <= logTime) LogFile.SaveLog(logName, $"index:{i};");
+//                if (nowLogTime <= logTime) LogFile.SaveLog(LogName, $"index:{i};");
                 totalWin += slotsComputer.GetWinValueByArrayWithoutLine(
                     slotsComputer.BaseSlotsReels.SlotsReelsDictionary["basespin1"].GetRandomArray(), true,
                     nowLogTime <= logTime);

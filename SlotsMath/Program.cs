@@ -8,11 +8,14 @@ namespace SlotsMath
     {
         public static string configPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/config/";
         public static string logPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/log/";
+        public static string ExcelSavePath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/log/";
+        public static bool EnableSaveLog = true;
+        
         
         private static int doSlotsId;
         public static void Main(string[] args)
         {
-            doSlotsId = 1001;
+            doSlotsId = 10001;
             DoSwitchId(doSlotsId);
         }
 
@@ -20,8 +23,8 @@ namespace SlotsMath
         {
             switch (slotsId)
             {
-                case 1001:
-                    DoSlotsById doSlotsById = new DoSlotsById();
+                case 10001:
+                    DoSlotsById doSlotsById = new DoSlotsById(10001);
                     doSlotsById.Main();
                     return;
                 case 1002:

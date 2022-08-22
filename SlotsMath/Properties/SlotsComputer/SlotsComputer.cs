@@ -32,6 +32,10 @@ namespace SlotsMath.Properties.SlotsComputer
             NormalSymbolWinInfoDict = new Dictionary<int, Dictionary<int, int>>();
         }
 
+        /// <summary>
+        /// 用元素集合类来创建
+        /// </summary>
+        /// <param name="slotsSymbols"></param>
         public SimulateDataInfo(List<SlotsSymbol> slotsSymbols)
         {
             NormalWinValue = 0;
@@ -48,7 +52,27 @@ namespace SlotsMath.Properties.SlotsComputer
                 }
             }
         }
-        
+
+        /// <summary>
+        /// 将NormalSymbolWinInfo转化为字符串(只打印中奖的)
+        /// </summary>
+        /// <returns></returns>
+        public string NormalSymbolWinInfoDictToString()
+        {
+            string outString = "";
+            if (NormalSymbolWinInfoDict.Count == 0) return "[]";
+            foreach (int fatherKey in NormalSymbolWinInfoDict.Keys)
+            {
+                outString += $"[{fatherKey}:";
+                foreach (int sonKey in NormalSymbolWinInfoDict[fatherKey].Keys)
+                {
+                    outString += $"{sonKey},{NormalSymbolWinInfoDict[fatherKey][sonKey]};";
+                }
+                outString += "]";
+            }
+            return outString;
+        }
+
         /// <summary>
         /// 将储存的数据重置
         /// </summary>
@@ -58,14 +82,20 @@ namespace SlotsMath.Properties.SlotsComputer
             AddFreeTime = 0;
             ScatterWinValue = 0;
             WinLineIndexList.Clear();
-            NormalSymbolWinInfoDict = new Dictionary<int, Dictionary<int, int>>();
-            foreach (int symbolId in NormalSymbolWinInfoDict.Keys)
-            {
-                foreach (int symbolCount in NormalSymbolWinInfoDict[symbolId].Keys)
-                {
-                    NormalSymbolWinInfoDict[symbolId][symbolCount] = 0;
-                }
-            }
+            NormalSymbolWinInfoDict.Clear();
+//            NormalSymbolWinInfoDict = new Dictionary<int, Dictionary<int, int>>();
+//            List<int> dictKeys1List = new List<int>();
+//            List<int> dictKeys2List = new List<int>();
+//            dictKeys1List.AddRange(NormalSymbolWinInfoDict.Keys);
+//            foreach (int key1 in dictKeys1List)
+//            {
+//                dictKeys2List.Clear();
+//                dictKeys2List.AddRange(NormalSymbolWinInfoDict[key1].Keys);
+//                foreach (int key2  in dictKeys2List)
+//                {
+//                    NormalSymbolWinInfoDict[key1][key2] = 0;
+//                }
+//            }
         }
 
         /// <summary>
@@ -76,20 +106,11 @@ namespace SlotsMath.Properties.SlotsComputer
         /// <param name="winTime">中奖次数</param>
         public virtual void NormalSymbolWinInfoAddWinTime(int symbolId ,int count,int winTime)
         {
-            if (NormalSymbolWinInfoDict.ContainsKey(symbolId))
-            {
-                if (NormalSymbolWinInfoDict[symbolId].ContainsKey(count))
-                {
-                    NormalSymbolWinInfoDict[symbolId][count] += winTime;
-                }
-                else
-                {
-                    throw (new SlotsTools.TempIsZeroException($"the symbolId is not in SimulateDataInfo NormalSymbolWinInfoDict!,id is {symbolId}"));
-                }
-                throw (new SlotsTools.TempIsZeroException($"the symbolId winCount is not in SimulateDataInfo NormalSymbolWinInfoDict! id is {symbolId},count is {count}"));
-            }
-            
+            if (!NormalSymbolWinInfoDict.ContainsKey(symbolId)) NormalSymbolWinInfoDict.Add(symbolId,new Dictionary<int, int>());
+            if (!NormalSymbolWinInfoDict[symbolId].ContainsKey(count)) NormalSymbolWinInfoDict[symbolId].Add(count,winTime);
+            NormalSymbolWinInfoDict[symbolId][count] += winTime;
         }
+        
     }
 
     
@@ -335,11 +356,10 @@ namespace SlotsMath.Properties.SlotsComputer
         /// <param name="symbolArray">实际使用的元素矩阵</param>
         /// <param name="isSaveWinInfo">如果为true，则会修改slotsSymbolDictionary中的中奖次数</param>
         /// <returns></returns>
-        public double GetWinValueByArrayWithLine(List<List<int>> symbolArray, bool isSaveWinInfo = true, bool isSaveWinLog = true)
+        public double GetWinValueByArrayWithLine(List<List<int>> symbolArray, bool isSaveWinInfo = true)
         {
             double totalWin = 0;
             List<int> oneLineSymbolList = new List<int>();
-            if (isSaveWinLog)
             {
                 string tempString = "symbolArray:";
                 foreach (List<int> i in symbolArray)
@@ -370,17 +390,16 @@ namespace SlotsMath.Properties.SlotsComputer
                         SlotsSymbols.SlotsSymbolsDic[tempWinList[0]]
                             .AddSymbolWinCount(tempWinList[1]);
                     } //如果需要则把中奖信息保存到symbol中
-                    if (isSaveWinLog)
-                    {
+                    #region "把中奖信息保存到log文件"
                         string tempString = $"lineIndex:{PayLine.payLinesList.IndexOf(payLine)},";
                         tempString += $"symbolId:{tempWinList[0]},winValue:{tempWinList[1]};";
                         LogFile.SaveLog(LogName,tempString);
-                    }//把中奖信息保存到log
+                    #endregion 
                 }//如果中奖则计算中奖金额，并保存相关信息
             }
             if (totalWin == 0)
             {
-                if (isSaveWinLog) LogFile.SaveLog(LogName,"no win!!!");
+                LogFile.SaveLog(LogName,"no win!!!");
             } //未中奖则打印未中奖
             return totalWin;
         }
@@ -430,8 +449,53 @@ namespace SlotsMath.Properties.SlotsComputer
             SimulateDataInfoObject.ScatterWinValue += GetScatterMultiple(scatterSymbolCount)*Bet;
             return SimulateDataInfoObject;
         }
-        
-        
+
+        /// <summary>
+        /// 模拟1次freespin，输出模拟结果
+        /// </summary>
+        /// <param name="symbolArray">元素矩阵</param>
+        /// <param name="isSaveWinInfo">是否保存信息</param>
+        /// <returns></returns>
+        public virtual SimulateDataInfo GetFreeSpinSimulateDateWithLine(List<List<int>> symbolArray, bool isSaveWinInfo = true)
+        {
+            SimulateDataInfoObject.Reset();
+            double totalWin = 0;
+            List<int> oneLineSymbolList = new List<int>();
+            foreach (List<int> payLine in PayLine.payLinesList)
+            {
+                oneLineSymbolList.Clear();
+                int index = 0;
+                foreach (int j in payLine)
+                {
+                    oneLineSymbolList.Add(symbolArray[index][j]);
+                    index++;
+                }//获取线上的元素
+                int[] tempWinList = GetMaxWinNormalSymbolInfoWithLine(oneLineSymbolList);//获取线上中奖元素和中奖长度
+                if (tempWinList[0] > 0)
+                {
+                    totalWin += SlotsSymbols.SlotsSymbolsDic[tempWinList[0]]
+                        .GetSymbolPay(tempWinList[1]); //本次spin的总中奖金额
+                    TotalWin += SlotsSymbols.SlotsSymbolsDic[tempWinList[0]]
+                        .GetSymbolPay(tempWinList[1]); //整个程序的总中奖金额
+                    SimulateDataInfoObject.NormalWinValue+=SlotsSymbols.SlotsSymbolsDic[tempWinList[0]]
+                        .GetSymbolPay(tempWinList[1]); //把普通元素的中奖数据装输出中
+                    SimulateDataInfoObject.WinLineIndexList.Add(PayLine.payLinesList.IndexOf(payLine));
+                    SimulateDataInfoObject.NormalSymbolWinInfoAddWinTime(tempWinList[0],tempWinList[1],1);
+                    if (isSaveWinInfo)
+                    {
+                        SlotsSymbols.SlotsSymbolsDic[tempWinList[0]]
+                            .AddSymbolWinCount(tempWinList[1]);
+                    } //如果需要则把中奖信息保存到symbol中
+                }//如果中奖则计算中奖金额，并保存相关信息
+            } //普通元素中奖计算
+            //获取free次数
+            SimulateDataInfoObject.AddFreeTime += GetFreeTime(symbolArray);
+            //获取scatter奖励金额
+            int scatterSymbolCount = SlotsTools.GetSymbolsCountByArray(symbolArray, GetSymbolIdListFromContainer(ScatterSymbolsList));
+            SimulateDataInfoObject.ScatterWinValue += GetScatterMultiple(scatterSymbolCount)*Bet;
+            return SimulateDataInfoObject;
+        }
+
         /// <summary>
         /// 全中奖线时获取特定普通元素的中奖信息（对第一列有wild的情况无效）
         /// </summary>
