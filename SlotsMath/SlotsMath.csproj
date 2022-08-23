@@ -70,7 +70,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\FilesMethod\DataTableMethod.cs" />
-    <Compile Include="Properties\FilesMethod\FileMethod.cs" />
+    <Compile Include="Properties\FilesMethod\ExcelMethod.cs" />
     <Compile Include="Properties\FilesMethod\LogFile.cs" />
     <Compile Include="Properties\DoSlots\DoSlotsById.cs" />
     <Compile Include="Properties\SLotsBaseClass.cs" />
@@ -80,6 +80,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace SlotsMath.Properties.FileMethod
 {
@@ -56,5 +56,44 @@ namespace SlotsMath.Properties.FileMethod
             return FileName;        //返回生成文件的绝对路径
         }
         
+        /// <summary>
+        /// 打印dataTable
+        /// </summary>
+        /// <param name="dataTable"></param>
+        public static void PrintDataTable(DataTable dataTable)
+        {
+            foreach (var tableHeard in dataTable.Columns)
+            {
+                Console.Write(tableHeard.ToString());
+                Console.Write(" ");
+            }
+            for (int i = 0; i < dataTable.Rows.Count; i++)
+            {
+                Console.Write("\n");
+                for (int j = 0; j < dataTable.Columns.Count; j++)
+                {
+                    Console.Write(dataTable.Rows[i][j]);
+                    Console.Write(" ");
+                } 
+            }
+            Console.Write("\n");
+            Console.Write("输出完毕 \n");
+        }
+        
+        /// <summary>
+        /// dataTable 转化为json格式的字符串
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
+        /// todo 这里转出来的格式不是想要的格式，需要单独写
+        public static string DataTableToJsonWithJsonNet(DataTable table)
+        { 
+            string JsonString=string.Empty; 
+            JsonString = JsonConvert.SerializeObject(table); 
+            return JsonString; 
+        }
+        
     }
+    
+    
 }

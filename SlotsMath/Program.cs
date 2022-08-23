@@ -6,14 +6,14 @@ namespace SlotsMath
     
     static class Program
     {
-        public static string configPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/config/";
-        public static string logPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/log/";
-        public static string ExcelSavePath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/log/";
-        public static bool EnableSaveLog = true;
+        public static string configPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/config/"; //配置文件路径
+        public static string logPath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/log/";  //日志文件路径(txt)
+        public static string ExcelSavePath = "/Users/dmj/Documents/GitHub/SlotsMath/SlotsMath/log/";    //输出的excel路径
+        public static bool EnableSaveLog = true; //是否将日志输出
         
         
         private static int doSlotsId;
-        public static void Main(string[] args)
+        public static void Main()
         {
             doSlotsId = 10001;
             DoSwitchId(doSlotsId);

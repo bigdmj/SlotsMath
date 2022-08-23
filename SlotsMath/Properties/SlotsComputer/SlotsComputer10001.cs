@@ -8,7 +8,7 @@ namespace SlotsMath.Properties.SlotsComputer
     public class SlotsComputer10001:SlotsComputer
     {
         public Dictionary<int, int> BonusCountDict;  
-        public SlotsComputer10001(Dictionary<string, DataTable> dataTableDictionary, double bet, string logName = "10001", int rowsCount = 3, int columnsCount = 5, bool isWithLine = true) : base(dataTableDictionary, bet, logName, rowsCount, columnsCount, isWithLine)
+        public SlotsComputer10001(Dictionary<string, DataTable> dataTableDictionary, string logName , int rowsCount = 3, int columnsCount = 5, bool isWithLine = true) : base(dataTableDictionary, logName, rowsCount, columnsCount, isWithLine)
         {
             BonusCountDict = new Dictionary<int, int>();
             BonusCountDict.Add(3,5);

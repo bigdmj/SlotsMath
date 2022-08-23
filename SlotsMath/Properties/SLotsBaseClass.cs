@@ -28,7 +28,7 @@ namespace SlotsMath.Properties
     /// </summary>
     public struct WinSymbolInfo
     {
-        public SlotsSymbol SlotsSymbol; //元素id
+        public SlotsSymbol SlotsSymbol; //元素类
         public int SymbolsCount; //中奖元素数
         public int SymbolWinTime; //中奖次数
 
@@ -341,6 +341,11 @@ namespace SlotsMath.Properties
             return symbolArray;
         }
         
+        /// <summary>
+        /// 在卷轴内随机截取出矩阵
+        /// </summary>
+        /// <param name="interceptRowsCount">列高</param>
+        /// <returns></returns>
         public List<List<int>> GetRandomArray(int interceptRowsCount = 3)
         {
             List<int> position = new List<int>();
@@ -422,6 +427,8 @@ namespace SlotsMath.Properties
         {
             return SlotsReelsDictionary[reelName].GetArray(position, interceptRowsCount);
         }
+        
+        
 
     }
 

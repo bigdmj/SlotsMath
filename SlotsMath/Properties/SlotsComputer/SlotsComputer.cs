@@ -1,5 +1,6 @@
 /*
  * SLots计算的基础类，包括最基础的计算中奖，输出中奖信息的逻辑
+ * 一次spin的计算逻辑在这里,比如说一次basespin，一次小游戏
  */
 
 using System;
@@ -8,6 +9,7 @@ using System.Data;
 using System.Linq;
 using System.Security.Policy;
 using NPOI.HSSF.Record;
+using NPOI.SS.Formula.Functions;
 using SlotsMath.Properties.FileMethod;
 
 namespace SlotsMath.Properties.SlotsComputer
@@ -115,13 +117,14 @@ namespace SlotsMath.Properties.SlotsComputer
 
     
     /// <summary>
-    /// slots父类，后续所有特殊玩法继承此类
+    /// SlotsComputer父类，后续所有特殊玩法继承此类
     /// </summary>
     public  class SlotsComputer
     {
-        public SlotsSymbols SlotsSymbols; //元素对象字典
-        public SlotsReels BaseSlotsReels; //卷轴对象字典
-        public SlotsReels FreeSlotsReels; //卷轴对象字典
+        #region 公共属性定义区
+        public SlotsSymbols SlotsSymbols; //元素对象集合
+        public SlotsReels BaseSlotsReels; //卷轴对象集合
+        public SlotsReels FreeSlotsReels; //卷轴对象集合
         public PayLine PayLine; //中奖线对象
         public List<SlotsSymbol> NormalSymbolsList; //普通元素列表，在全线中只有这里面的元素会被查询普通中奖()
         public List<SlotsSymbol> WildSymbolsList; 
@@ -131,7 +134,6 @@ namespace SlotsMath.Properties.SlotsComputer
         public List<SlotsSymbol> CollectSymbolsList;
         public List<SlotsSymbol> CustomSymbolsList;
         public SimulateDataInfo SimulateDataInfoObject;
-
         public bool IsWithLine; //是否有winLine
         public double Bet;    //总下注金额    
         public int Row; //显示区域的行数            
@@ -142,20 +144,26 @@ namespace SlotsMath.Properties.SlotsComputer
         public Dictionary<int, int> FreeCountDict;        //free元素数量和free次数对应关系字典
         public Dictionary<int, double> ScatterRewardDict;        //scatter元素数量和scatter奖励倍数字典
         public string LogName;
+        public Dictionary<string, string> BaseConfigDict;    //储存base分页数据的字典
+        #endregion
         
-
         /// <summary>
-        /// slots构造函数
+        /// slotsComputer构造函数
         /// </summary>
         /// <param name="dataTableDictionary">右excel转化来的DataTable字典</param>
-        /// <param name="freeCountDict">free次数字典[free元素数量，free次数]</param>
-        /// <param name="scatterRewardDict">scatter奖励字典[scatter元素数量，奖励倍数]</param>
+        /// <param name="logName">日志名称(不带后缀)</param>
         /// <param name="rowsCount">显示区域行数</param>
         /// <param name="columnsCount">显示区域列数</param>
         /// <param name="isWithLine">是否有中奖线</param>
-        public SlotsComputer(Dictionary<string, DataTable> dataTableDictionary ,double bet,string logName = "1001.txt", int rowsCount = 3, int columnsCount = 5,
+        public SlotsComputer(Dictionary<string, DataTable> dataTableDictionary ,string logName, int rowsCount = 3, int columnsCount = 5,
             bool isWithLine = true)
         {
+            //生成baseConfigDict
+            BaseConfigDict = new Dictionary<string, string>();
+            foreach (DataRow dataRow in dataTableDictionary["base"].Rows)
+            {
+                BaseConfigDict.Add(dataRow[0].ToString(),dataRow[1].ToString());
+            }
             //生成SlotsSymbols
             SlotsSymbols = new SlotsSymbols(dataTableDictionary["element"], dataTableDictionary["reward"]);
             //生成SlotsReels(所有的basespin的卷轴都必须有这个关键字，且其他任何sheet不能用这个关键字；freespin卷轴亦然)
@@ -178,6 +186,7 @@ namespace SlotsMath.Properties.SlotsComputer
             {
                 PayLine = new PayLine(dataTableDictionary["line"]);
             }
+            #region 公共属性赋值
             //将元素装到对应的类型容器中
             NormalSymbolsList = new List<SlotsSymbol>();
             WildSymbolsList = new List<SlotsSymbol>();
@@ -217,25 +226,81 @@ namespace SlotsMath.Properties.SlotsComputer
                 }
             }
             //给常用变量赋值
-            Bet = bet;
+            Bet = Convert.ToDouble(BaseConfigDict["linebet"]);
             IsWithLine = isWithLine;
             Row = rowsCount;
             Columns = columnsCount;
             BaseWin = 0;
             FreeWin = 0;
             TotalWin = 0;
+            //free元素和次数对应关系（这里需要改成读配置）
             FreeCountDict = new Dictionary<int, int>();
             FreeCountDict.Add(3,5);
             FreeCountDict.Add(4,8);
             FreeCountDict.Add(5,15);
+            //Scatter元素和倍数对应关系(这里需要改成读配置)
             ScatterRewardDict = new Dictionary<int, double>();
             ScatterRewardDict.Add(3,5);
             ScatterRewardDict.Add(4,8);
             ScatterRewardDict.Add(5,15);
             LogName = logName;
             SimulateDataInfoObject = new SimulateDataInfo(NormalSymbolsList); //创建模拟时输出的数据
+            #endregion
         }
 
+        /// <summary>
+        /// 确定本次Spin用哪个卷轴
+        /// </summary>
+        /// <returns></returns>
+        public virtual string GetBaseReelByRandom()
+        {
+            string outString = "";
+            List<string> baseReelNames = new List<string>();
+            foreach (string reelNames in BaseSlotsReels.SlotsReelsDictionary.Keys)
+            {
+                baseReelNames.Add(reelNames);
+            }
+            int i = new Random().Next(0,baseReelNames.Count);
+            outString = baseReelNames[i];
+            return outString;
+        }
+        
+        /// <summary>
+        /// 确定本次FreeSpin用哪个卷轴
+        /// </summary>
+        /// <returns></returns>
+        public virtual string GetFreeReelByRandom()
+        {
+            string outString = "";
+            List<string> freeReelNames = new List<string>();
+            foreach (string reelNames in FreeSlotsReels.SlotsReelsDictionary.Keys)
+            {
+                freeReelNames.Add(reelNames);
+            }
+            int i = new Random().Next(0,freeReelNames.Count);
+            outString = freeReelNames[i];
+            return outString;
+        }
+        
+        /// <summary>
+        /// 确定本次spin的position
+        /// </summary>
+        /// <param name="slotsReel">slotsReel</param>
+        /// <returns></returns>
+        public virtual List<int> GetPositionByRandom(SlotsReel slotsReel)
+        {
+            List<int> position = new List<int>();
+            for (int reelindex = 0;
+                reelindex < slotsReel.Reel.Count;
+                reelindex++)
+            {
+                position.Add(new Random().Next(0,
+                    slotsReel.Reel[reelindex].Count));
+            }
+            return position;
+        }
+        
+        
         /// <summary>
         /// 计算获取的free次数
         /// </summary>
@@ -249,7 +314,7 @@ namespace SlotsMath.Properties.SlotsComputer
             {
                 freeSymbolIdList.Add(slotsSymbol.SymbolId);
             }
-            int freeSymbolCount = SlotsTools.GetSymbolsCountByArray(symbolArray, freeSymbolIdList);
+            int freeSymbolCount = SlotsTools.GetSymbolsCountByArray(symbolArray, freeSymbolIdList); //获取free元素的总数量
             if (FreeCountDict.Keys.Contains(freeSymbolCount))
             {
                 outInt = FreeCountDict[freeSymbolCount];
@@ -294,8 +359,7 @@ namespace SlotsMath.Properties.SlotsComputer
             }
             return outList;
         }
-
-
+        
         /// <summary>
        /// 输出一条中奖线上元素的中奖信息(对第一列是wild无效)[0:元素id，1：中奖长度]
        /// </summary>
@@ -548,7 +612,6 @@ namespace SlotsMath.Properties.SlotsComputer
         {
             double totalWin = 0;
             WinSymbolInfo tempWinSymbolInfo = new WinSymbolInfo();
-            Dictionary<int, WinSymbolInfo> tempWinSymbolInfoDict = new Dictionary<int, WinSymbolInfo>();
             if (isLogWinInformation)
             {
                 string tempString = "";
@@ -565,12 +628,12 @@ namespace SlotsMath.Properties.SlotsComputer
                 tempWinSymbolInfo =
                     GetWinSymbolInfoByArrayWithoutLine(symbolArray, normalSymbol.SymbolId);
                 double tempWin = normalSymbol.GetSymbolPay(tempWinSymbolInfo.SymbolsCount) * tempWinSymbolInfo.SymbolWinTime;
-                totalWin += tempWin;
+                totalWin += tempWin;   //本次spin的总中奖金额
+                TotalWin += tempWin;  //全局的总奖励金额
                 if (isChangeWinCount && tempWin >0)
                 {
                     normalSymbol.AddSymbolWinCount(tempWinSymbolInfo.SymbolsCount, tempWinSymbolInfo.SymbolWinTime);
-                }
-                
+                } //slotsSymbol记录中奖信息
                 if (isLogWinInformation && tempWin>0)
                 {
                     string tempString = "";
@@ -580,15 +643,84 @@ namespace SlotsMath.Properties.SlotsComputer
                     tempString += "WinValue:"+tempWin+",";
                     LogFile.SaveLog(LogName,tempString);
                 }//log 中奖元素的信息，包括id 中奖长度 中奖数 中奖金额
-            }
+            } //计算普通元素的中奖金额
             if (isLogWinInformation)
             {
                 string tempString = "";
                 tempString += "totalWin:"+totalWin+";\n";
                 LogFile.SaveLog(LogName,tempString);
-            }//log 中中奖金额
+            }//log 中奖金额
             return totalWin;
         }
+        
+        /// <summary>
+        /// 模拟单次baseSpin，输出奖励数据(全线)
+        /// </summary>
+        /// <param name="symbolArray">元素矩阵</param>
+        /// <param name="isSaveWinInfo">是否把中奖信息保存到slotsComputer的slotsSymbol中</param>
+        /// <returns></returns>
+        public virtual SimulateDataInfo GetBaseSpinSimulateDateWithoutLine(List<List<int>> symbolArray, bool isSaveWinInfo = true)
+        {
+            SimulateDataInfoObject.Reset();
+            double totalWin = 0;
+            WinSymbolInfo tempWinSymbolInfo = new WinSymbolInfo();
+            Dictionary<int, WinSymbolInfo> tempWinSymbolInfoDict = new Dictionary<int, WinSymbolInfo>();
+            foreach (SlotsSymbol normalSymbol in NormalSymbolsList)
+            {
+                tempWinSymbolInfo =
+                    GetWinSymbolInfoByArrayWithoutLine(symbolArray, normalSymbol.SymbolId);
+                double tempWin = normalSymbol.GetSymbolPay(tempWinSymbolInfo.SymbolsCount) * tempWinSymbolInfo.SymbolWinTime;
+                totalWin += tempWin;
+                TotalWin += tempWin;
+                if (tempWin >0)
+                {
+                    if (isSaveWinInfo)  normalSymbol.AddSymbolWinCount(tempWinSymbolInfo.SymbolsCount, tempWinSymbolInfo.SymbolWinTime);
+                    SimulateDataInfoObject.NormalSymbolWinInfoAddWinTime(tempWinSymbolInfo.SlotsSymbol.SymbolId,tempWinSymbolInfo.SymbolsCount,tempWinSymbolInfo.SymbolWinTime);
+                }
+            }
+            SimulateDataInfoObject.NormalWinValue = totalWin;
+            //获取free次数
+            SimulateDataInfoObject.AddFreeTime += GetFreeTime(symbolArray);
+            //获取scatter奖励金额
+            int scatterSymbolCount = SlotsTools.GetSymbolsCountByArray(symbolArray, GetSymbolIdListFromContainer(ScatterSymbolsList));
+            SimulateDataInfoObject.ScatterWinValue += GetScatterMultiple(scatterSymbolCount)*Bet;
+            return SimulateDataInfoObject;
+        }
+        
+        /// <summary>
+        /// 模拟单次baseSpin，输出奖励数据(全线)
+        /// </summary>
+        /// <param name="symbolArray">元素矩阵</param>
+        /// <param name="isSaveWinInfo">是否把中奖信息保存到slotsComputer的slotsSymbol中</param>
+        /// <returns></returns>
+        public virtual SimulateDataInfo GetFreeSpinSimulateDateWithoutLine(List<List<int>> symbolArray, bool isSaveWinInfo = true)
+        {
+            SimulateDataInfoObject.Reset();
+            double totalWin = 0;
+            WinSymbolInfo tempWinSymbolInfo = new WinSymbolInfo();
+            Dictionary<int, WinSymbolInfo> tempWinSymbolInfoDict = new Dictionary<int, WinSymbolInfo>();
+            foreach (SlotsSymbol normalSymbol in NormalSymbolsList)
+            {
+                tempWinSymbolInfo =
+                    GetWinSymbolInfoByArrayWithoutLine(symbolArray, normalSymbol.SymbolId);
+                double tempWin = normalSymbol.GetSymbolPay(tempWinSymbolInfo.SymbolsCount) * tempWinSymbolInfo.SymbolWinTime;
+                totalWin += tempWin;
+                TotalWin += tempWin;
+                if (tempWin >0)
+                {
+                    if (isSaveWinInfo)  normalSymbol.AddSymbolWinCount(tempWinSymbolInfo.SymbolsCount, tempWinSymbolInfo.SymbolWinTime);
+                    SimulateDataInfoObject.NormalSymbolWinInfoAddWinTime(tempWinSymbolInfo.SlotsSymbol.SymbolId,tempWinSymbolInfo.SymbolsCount,tempWinSymbolInfo.SymbolWinTime);
+                }
+            }
+            SimulateDataInfoObject.NormalWinValue = totalWin;
+            //获取free次数
+            SimulateDataInfoObject.AddFreeTime += GetFreeTime(symbolArray);
+            //获取scatter奖励金额
+            int scatterSymbolCount = SlotsTools.GetSymbolsCountByArray(symbolArray, GetSymbolIdListFromContainer(ScatterSymbolsList));
+            SimulateDataInfoObject.ScatterWinValue += GetScatterMultiple(scatterSymbolCount)*Bet;
+            return SimulateDataInfoObject;
+        }
+        
     }
     
     

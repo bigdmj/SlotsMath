@@ -14,7 +14,7 @@
         </e>
         <e p="FilesMethod" t="Include">
           <e p="DataTableMethod.cs" t="Include" />
-          <e p="FileMethod.cs" t="Include" />
+          <e p="ExcelMethod.cs" t="Include" />
           <e p="LogFile.cs" t="Include" />
         </e>
         <e p="SLotsBaseClass.cs" t="Include" />
@@ -24,6 +24,7 @@
         </e>
         <e p="SlotsTools.cs" t="Include" />
       </e>
+      <e p="Readme.txt" t="Include" />
       <e p="SlotsMath.csproj" t="IncludeRecursive" />
     </e>
     <e p="$USER_HOME$/Library/Caches/Rider2019.2/extResources" t="IncludeRecursive" />
