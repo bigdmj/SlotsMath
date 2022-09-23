@@ -31,6 +31,10 @@ namespace SlotsMath.Properties
         public SlotsSymbol SlotsSymbol; //元素类
         public int SymbolsCount; //中奖元素数
         public int SymbolWinTime; //中奖次数
+        public int _3wildWinTime;//3个wild中奖次数（全中奖线可能同时有普通元素中奖和wild中奖）
+        public int _4wildWinTime;
+        public int _5wildWinTime;
+        
 
         /// <summary>
         /// 结构体构造函数
@@ -43,6 +47,9 @@ namespace SlotsMath.Properties
             SlotsSymbol = slotsSymbol;
             SymbolsCount = symbolsCount;
             SymbolWinTime = symbolWinTime;
+            _3wildWinTime = 0;
+            _4wildWinTime = 0;
+            _5wildWinTime = 0;
         }
     }
     
@@ -266,7 +273,21 @@ namespace SlotsMath.Properties
                 SlotsSymbolsDic[symbolId].SetSlotsSymbolPay( Convert.ToInt32(dataRow["num"].ToString()), Convert.ToDouble(dataRow["mult"].ToString()));
             }
         }
-        
+
+
+        /// <summary>
+        /// 获取wild的赔率,wild本身如果没有赔率或赔率比1好元素小则输出1号元素的赔率
+        /// </summary>
+        /// <param name="symbolCount"></param>
+        /// <returns></returns>
+        public double GetWildPay(int symbolCount)
+        {
+            if (SlotsSymbolsDic[21].GetSymbolPay(symbolCount)>SlotsSymbolsDic[1].GetSymbolPay(symbolCount))
+            {
+                return SlotsSymbolsDic[21].GetSymbolPay(symbolCount);
+            }
+            return SlotsSymbolsDic[1].GetSymbolPay(symbolCount);
+        }
     }
     
     
@@ -275,10 +296,11 @@ namespace SlotsMath.Properties
     /// </summary>
     public class SlotsReel
     {
+        public string name;
         public List<List<int>> Reel; //扩展前的卷轴
         public List<List<int>> ExpandReel; //扩展后的卷轴
-
-
+        public double ReelWeight;//卷轴的权重
+        public List<List<double>> PositionWeightList;//卷轴的位置号权重
         public readonly int ColumnsCount; //列数       
         public readonly List<int> RowsCount; //行数列表
 
@@ -286,14 +308,13 @@ namespace SlotsMath.Properties
         /// 卷轴构造函数
         /// </summary>
         /// <param name="reelDataTable">卷轴的DataTable</param>
-        /// <param name="reelType">卷轴类型</param>
         public SlotsReel(DataTable reelDataTable)
         {
             List<List<int>> reel = new List<List<int>>();
             int rowCount = reelDataTable.Rows.Count;
             int dataTableColumnsCount = reelDataTable.Columns.Count;
-            ColumnsCount = dataTableColumnsCount-1;
             RowsCount = new List<int>();
+            ColumnsCount = dataTableColumnsCount-1;
             for (int i = 0; i < ColumnsCount; i++)
             {
                 RowsCount.Add(0);
@@ -303,7 +324,7 @@ namespace SlotsMath.Properties
             {
                 for (int j = 0; j < rowCount; j++)
                 {
-                    if (reelDataTable.Rows[j][i].ToString() != "0")
+                    if (reelDataTable.Rows[j][i].ToString() != "0" && reelDataTable.Rows[j][i] != DBNull.Value)
                     {
                         try
                         {
@@ -317,11 +338,37 @@ namespace SlotsMath.Properties
                         }
                     }
                 }
+                
+                Reel = reel;
+                ExpandReel = GetExpandReel();
             }
-            Reel = reel;
-            ExpandReel = GetExpandReel();
         }
-        
+
+        /// <summary>
+        /// 给reel的位置号权重赋值
+        /// </summary>
+        /// <param name="reelDataTable"></param>
+        public void SetPositionWeight(DataTable reelDataTable)
+        {
+            List<List<int>> reel = new List<List<int>>();
+            for (int i = 1; i < ColumnsCount; i++)
+            {
+                for (int j = 0; j < RowsCount[i-1]; j++)
+                {
+                    try
+                    {
+                        PositionWeightList[i - 1].Add(Convert.ToInt32(reelDataTable.Rows[j][i].ToString()));
+                        RowsCount[i - 1]++;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("dataTable give Reel weight fail.失败，行数为" + j + ",列数为" + i + ";");
+                        throw;
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// 输入卷轴位置号，和截取长度，输出元素矩阵
@@ -334,7 +381,8 @@ namespace SlotsMath.Properties
             List<List<int>> symbolArray = new List<List<int>>();
             for (int i = 0; i < position.Count; i++)
             {
-                List<int> tempList = ExpandReel[i].GetRange(position[i], interceptRowsCount);
+                List<int> tempList = ExpandReel[i].GetRange(position[i]-interceptRowsCount+Reel[i].Count+1, interceptRowsCount);    //由于0号位置是最下面。所以这里需要把position调到最上面一个位置，并进行倒叙
+                tempList.Reverse();
                 symbolArray.Add(tempList);
             }
 
@@ -391,7 +439,6 @@ namespace SlotsMath.Properties
         public SlotsReels()
         {
             SlotsReelsDictionary = new Dictionary<string, SlotsReel>();
-            
         }
         
         /// <summary>

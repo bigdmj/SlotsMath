@@ -55,6 +55,7 @@ namespace SlotsMath.Properties.FileMethod
             objFileStream.Close();
             return FileName;        //返回生成文件的绝对路径
         }
+
         
         /// <summary>
         /// 打印dataTable

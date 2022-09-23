@@ -87,7 +87,25 @@ namespace SlotsMath.Properties
             outString += "]";
             return outString;
         }
-
+        
+        /// <summary>
+        /// 把list转化为string
+        /// </summary>
+        /// <param name="list">list中的元素必须能转化为string</param>
+        /// <returns></returns>
+        public static string DoubleListToString<T> (List<List<T>>list)
+        {
+            string outString = "[";
+            foreach (var VARIABLE in list)
+            {
+                outString += ListToString(VARIABLE) + ",";
+            }
+            if (list.Count>0)outString = outString.Substring(0, outString.Length - 1);
+            outString += "]";
+            return outString;
+        }
+        
+        
         /// <summary>
         /// 获取列表中特定元素的数量
         /// </summary>
@@ -106,6 +124,68 @@ namespace SlotsMath.Properties
                 }
             }
             return elementCount;
+        }
+
+        /// <summary>
+        /// 返回搜索元素在列表中的第一个位置,如果全都是不是搜索元素则返回长度,如果搜索列表为空则返回-1
+        /// </summary>
+        /// <param name="inValueList">搜索列表</param>
+        /// <param name="t">搜索的元素</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static int GetSymbolIndexInList<T>(List<T> inValueList, T t)
+        {
+            if (inValueList.Count == 0)
+            {
+                return -1;
+            }
+            int index = 0;
+            foreach (var t1 in inValueList)
+            {
+                if (t1.Equals(t))
+                {
+                    return index;
+                }
+                index++;
+            }
+            return index;
+
+        }
+
+        /// <summary>
+        /// 列表中指定id的元素会扩展到整列
+        /// </summary>
+        /// <param name="symbolArray">扩展前的矩阵</param>
+        /// <param name="symbolId">会扩展到整列的元素id</param>
+        /// <returns></returns>
+        public static List<List<int>> GetExpandSymbolArray(List<List<int>> symbolArray, int symbolId)
+        {
+            List<List<int>> outList = new List<List<int>>();
+            List<int> spcialSymbolCountList = new List<int>(); //每列特定元素的数量
+            List<int> addSymbolList = new List<int>();        //用来填充的特殊元素
+            for (int i = 0; i < symbolArray[0].Count; i++)
+            {
+                addSymbolList.Add(symbolId);
+            }
+            //获取每一列特定元素数量
+            foreach (List<int> i in symbolArray)
+            {
+                int tempElementCount = SlotsTools.GetSymbolCountInList(i, symbolId);
+                spcialSymbolCountList.Add(tempElementCount);
+            }
+            
+            for (int i = 0; i < spcialSymbolCountList.Count; i++)
+            {
+                if (spcialSymbolCountList[i]>0)
+                {
+                    outList.Add(addSymbolList);
+                }
+                else
+                {
+                    outList.Add(symbolArray[i]);
+                }
+            }
+            return outList;
         }
 
         /// <summary>
@@ -160,7 +240,6 @@ namespace SlotsMath.Properties
             return outInt;
         }
 
-        
         /// <summary>
         /// 输出中奖线上的元素列表
         /// </summary>
@@ -186,17 +265,50 @@ namespace SlotsMath.Properties
             return outList;
         }
 
+        
         /// <summary>
-        /// 根据权重随机，未完成
-        /// todo
+        /// 随机种子值
         /// </summary>
-        /// <param name="randomObjectList">需要随机的对象</param>
-        /// <param name="randomWeight">权重列表</param>
-        /// <typeparam name="T">任何类型</typeparam>
         /// <returns></returns>
-        public static T Random<T>(List<T> randomObjectList,List<double> randomWeightList)
+        private static int GetRandomSeed()
         {
-            return randomObjectList[0];
+            byte[] bytes = new byte[4];
+            System.Security.Cryptography.RNGCryptoServiceProvider rng = new System.Security.Cryptography.RNGCryptoServiceProvider();
+            rng.GetBytes(bytes);
+            return BitConverter.ToInt32(bytes, 0);
+        }
+        
+        /// <summary>
+        /// 带权重的随机
+        /// </summary>
+        /// <param name="list">原始列表</param>
+        /// <param name="weightList">权重列表</param>
+        /// <returns></returns>
+        public static T GetRandomObjByWeight<T>(List<T> list, List<double> weightList) 
+        {
+            if (list == null || list.Count != weightList.Count )
+            {
+                throw (new TempIsZeroException("random fail,random'count is not like weight'count"));
+            }
+            //计算权重总和
+            double totalWeights = 0;
+            for (int i = 0; i < weightList.Count; i++)
+            {
+                totalWeights += weightList[i];  //权重+1，防止为0情况。
+            }
+            //随机赋值权重
+            System.Random ran = new System.Random(GetRandomSeed());  //GetRandomSeed()随机种子，防止快速频繁调用导致随机一样的问题 
+            double tempValue = ran.NextDouble() * totalWeights;
+            double nowValue = 0;
+            for (int i = 0; i < weightList.Count; i++)
+            {
+                nowValue += weightList[i];
+                if (nowValue>=tempValue)
+                {
+                    return list[i];
+                }
+            }
+            return list[0];
         }
         
         /// <summary>

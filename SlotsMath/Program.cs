@@ -1,4 +1,9 @@
-﻿using System.Security.Policy;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Policy;
+using ICSharpCode.SharpZipLib.Zip;
+using SlotsMath.Properties;
+using SlotsMath.Properties.CheckSlots;
 using SlotsMath.Properties.SlotsMethod;
 
 namespace SlotsMath
@@ -12,24 +17,74 @@ namespace SlotsMath
         public static bool EnableSaveLog = true; //是否将日志输出
         
         
-        private static int doSlotsId;
+        private static string SlotsId;
+        private static string mode;
         public static void Main()
         {
-            doSlotsId = 10001;
-            DoSwitchId(doSlotsId);
+            SlotsId = "test";
+            mode = "simulate";
+//            mode = "simulate";
+            if (mode == "check")
+            {
+                CheckSwitchId(SlotsId);
+            }
+            if (mode == "simulate")
+            {
+                DoSwitchId(SlotsId);
+            }
+            
+            
         }
 
-        private static void DoSwitchId(int slotsId)
+        private static void DoSwitchId(string slotsId)
         {
             switch (slotsId)
             {
-                case 10001:
-                    DoSlotsById doSlotsById = new DoSlotsById(10001);
-                    doSlotsById.Main();
+                case "test":
+                    DoSlotsById doSlotsById = new DoSlotsById("test");
+                    doSlotsById.Main(100,100);
                     return;
-                case 1002:
+                case "OlympusXUP":
+                    DoSlotsOlympusXUP doSlotsOlympusXup = new DoSlotsOlympusXUP("OlympusXUP");
+                    doSlotsOlympusXup.Main(100,100);
+                    return;
+                case "999":
+                    foreach (int po in GetPositionListFromLog("[1,2,3,4,5]"))
+                    {
+                        Console.WriteLine(po);
+                    }
                     return;
             }
+        }
+        
+        private static void CheckSwitchId(string slotsId)
+        {
+            switch (slotsId)
+            {
+                case "1001":
+                    CheckSlots checkSlots = new CheckSlots();
+                    checkSlots.Main();
+                    return;
+                case "999":
+                    foreach (int po in GetPositionListFromLog("[1,2,3,4,5]"))
+                    {
+                        Console.WriteLine(po);
+                    }
+                    return;
+            }
+        }
+        
+        static List<int> GetPositionListFromLog(string positionString)
+        {
+            
+            string newList =  positionString.Substring(1,positionString.Length-2);
+            System.String[] lista = newList.Split(new[] {','});
+            List<int> outList = new List<int>();
+            foreach (string VARIABLE in lista)
+            {
+                outList.Add(Convert.ToInt32(VARIABLE));
+            }
+            return outList;
         }
     }
 }

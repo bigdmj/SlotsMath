@@ -9,8 +9,13 @@
       <e p="Program.cs" t="Include" />
       <e p="Properties" t="Include">
         <e p="AssemblyInfo.cs" t="Include" />
+        <e p="CheckSlots" t="Include">
+          <e p="CheckSlots.cs" t="Include" />
+        </e>
         <e p="DoSlots" t="Include">
+          <e p="DoSlotsBigBass.cs" t="Include" />
           <e p="DoSlotsById.cs" t="Include" />
+          <e p="DoSlotsOlympusXUP.cs" t="Include" />
         </e>
         <e p="FilesMethod" t="Include">
           <e p="DataTableMethod.cs" t="Include" />
@@ -20,7 +25,10 @@
         <e p="SLotsBaseClass.cs" t="Include" />
         <e p="SlotsComputer" t="Include">
           <e p="SlotsComputer.cs" t="Include" />
-          <e p="SlotsComputer10001.cs" t="Include" />
+          <e p="SlotsComputer1001.cs" t="Include" />
+          <e p="SlotsComputerBigBass.cs" t="Include" />
+          <e p="SlotsComputerOlypusXUP.cs" t="Include" />
+          <e p="SlotsComputertest.cs" t="Include" />
         </e>
         <e p="SlotsTools.cs" t="Include" />
       </e>

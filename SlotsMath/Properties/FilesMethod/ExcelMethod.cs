@@ -19,9 +19,9 @@ namespace SlotsMath.Properties.FileMethod
         /// 将excel中特定名称的表导入到datatable  
         /// </summary>  
         /// <param name="filePath">excel路径</param>  
-        /// <param name="isColumnName">第一行是否是列名</param>  
+        /// <param name="firstIsColumnName">第一行是否是列名,否则第二行才是列名</param>
         /// <returns>返回datatable</returns>  
-        public static DataTable ExcelToDataTableByName(string filePath, string bookName, bool isColumnName)
+        public static DataTable ExcelToDataTableByName(string filePath, string bookName, bool firstIsColumnName)
         {
             DataTable dataTable = null;
             FileStream fs = null;
@@ -53,11 +53,11 @@ namespace SlotsMath.Properties.FileMethod
                             if (rowCount > 0)
                             {
                                 IRow firstRow = sheet.GetRow(0);//第一行  
+                                IRow secondRow = sheet.GetRow(1);//第二行  
                                 int cellCount = firstRow.LastCellNum;//列数  
  
                                 //构建datatable的列  
-                                //todo 这里要改成读取我们的配置表
-                                if (isColumnName)
+                                if (firstIsColumnName)
                                 {
                                     startRow = 1;//如果第一行是列名，则从第二行开始读取  
                                     for (int i = firstRow.FirstCellNum; i < cellCount; ++i)
@@ -73,12 +73,20 @@ namespace SlotsMath.Properties.FileMethod
                                         }
                                     }
                                 }
-                                else
+                                else//否则第2行才是表头，不管第一行
                                 {
-                                    for (int i = firstRow.FirstCellNum; i < cellCount; ++i)
+                                    startRow = 2;//如果第一行是列名，则从第二行开始读取  
+                                    for (int i = secondRow.FirstCellNum; i < cellCount; ++i)
                                     {
-                                        column = new DataColumn("column" + (i + 1));
-                                        dataTable.Columns.Add(column);
+                                        cell = firstRow.GetCell(i);
+                                        if (cell != null)
+                                        {
+                                            if (cell.StringCellValue != null)
+                                            {
+                                                column = new DataColumn(cell.StringCellValue);
+                                                dataTable.Columns.Add(column);
+                                            }
+                                        }
                                     }
                                 }
  

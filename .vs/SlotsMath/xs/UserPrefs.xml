@@ -1,0 +1,33 @@
+﻿<Properties StartupConfiguration="{6ABFB9E1-BF8F-46B8-AC47-A88D79947EA7}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="SlotsMath/Properties/SlotsComputer/SlotsComputer.cs">
+    <Files>
+      <File FileName="SlotsMath/Readme.txt" Line="15" Column="9" />
+      <File FileName="SlotsMath/Program.cs" Line="22" Column="52" />
+      <File FileName="SlotsMath/Properties/SlotsComputer/SlotsComputer10001.cs" Line="89" Column="10" />
+      <File FileName="SlotsMath/Properties/SlotsComputer/SlotsComputer.cs" Line="99" Column="20" />
+      <File FileName="SlotsMath/Properties/SlotsComputer/SlotsComputerOlypusXUP.cs" Line="22" Column="41" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="SlotsMath" expanded="True">
+            <Node name="SlotsMath" expanded="True">
+              <Node name="Properties" expanded="True">
+                <Node name="SlotsComputer" expanded="True">
+                  <Node name="SlotsComputer.cs" selected="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.SlotsMath PreferredExecutionTarget="MonoDevelop.Default" />
+</Properties>

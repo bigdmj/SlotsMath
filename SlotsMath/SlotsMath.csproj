@@ -69,14 +69,20 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\CheckSlots\CheckSlots.cs" />
+    <Compile Include="Properties\DoSlots\DoSlotsBigBass.cs" />
+    <Compile Include="Properties\DoSlots\DoSlotsOlympusXUP.cs" />
     <Compile Include="Properties\FilesMethod\DataTableMethod.cs" />
     <Compile Include="Properties\FilesMethod\ExcelMethod.cs" />
     <Compile Include="Properties\FilesMethod\LogFile.cs" />
     <Compile Include="Properties\DoSlots\DoSlotsById.cs" />
     <Compile Include="Properties\SLotsBaseClass.cs" />
     <Compile Include="Properties\SlotsComputer\SlotsComputer.cs" />
-    <Compile Include="Properties\SlotsComputer\SlotsComputer10001.cs" />
+    <Compile Include="Properties\SlotsComputer\SlotsComputerTest.cs" />
+    <Compile Include="Properties\SlotsComputer\SlotsComputer1001.cs" />
+    <Compile Include="Properties\SlotsComputer\SlotsComputerBigBass.cs" />
     <Compile Include="Properties\SlotsTools.cs" />
+    <Compile Include="Properties\SlotsComputer\SlotsComputerOlypusXUP.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
